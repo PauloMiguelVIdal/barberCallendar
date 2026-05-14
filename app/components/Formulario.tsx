@@ -86,28 +86,32 @@ export default function Formulario({ horario, fecharModal, agendarHorario,
                 <button className="bg-black flex items-center justify-center rounded-xl w-[35px] aspect-square absolute top-[10%] right-[5%]" onClick={fecharModal}><X/></button>
 
                 <div>
-                    <h1 className="text-black text-xl text-center"> agendando horario para {horario}</h1>
+                    {/* <h1 className="text-black text-xl text-center"> agendando horario para {horario}</h1> */}
 
                     <input className="text-black bg-black/30 mt-6 pl-[10px] w-full self-center h-[40px] rounded-sm" onChange={(e) => setNome(e.target.value)} type="text" placeholder="NOME" />
                     <input className="text-black focus:black bg-black/30 mt-3 pl-[10px] w-full self-center h-[40px] rounded-sm" onChange={(e) => setTelefone(e.target.value)} type="text" placeholder="TELEFONE" />
                 </div>
-
+<div className="bg-black w-full rounded-xl gap-4">
                 {services.map((serviço, index) => (
                     <Services key={serviço.serviço} serviços={serviço}
                         onServices={() => selecionarServiços(index)}
                     />
                 ))}
+</div>
+                <div className="w-[90%] flex justify-between">
+                <h2 className="text-black">{horario} </h2>
                 <h2 className="text-black">Total R$: {somaFatu}</h2>
+                </div>
 
-                <div className="w-full flex items-center justify-around">
-                    <button className="w-full bg-black p-4 rounded-xl" onClick={() => {
+                <div className="w-full rounded-xl bg-black flex items-center">
+                    <button className="w-full bg-whitre p-4 flex items-center justify-around rounded-xl" onClick={() => {
                         if (nome && telefone) {
                             agendarHorario(nome, telefone)
                         } else {
                             alert('Preencha todos os campos para realizar o agendamento')
                         }
                     }}>
-                        <CalendarCheck2/>agendar</button>
+                        <CalendarCheck2/><h2 className="text-Bold text-center">CONFIRMAR AGENDAMENTO</h2></button>
                 </div>
             </div>
         </div>

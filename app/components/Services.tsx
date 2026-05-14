@@ -22,7 +22,7 @@ export default function Services({ serviços,onServices}: Props) {
 
     return (
 
-        <div className="flex items-center w-full h-[40px] bg-black rounded-sm justify-between">
+        <div className="flex items-center w-full h-[40px] bg-white/40 rounded-sm justify-between  mt-[4px]">
             <div className="w-full flex">
                 <input checked={serviços.checkbox} onChange={onServices} className="h-[32px] ml-[4px] rounded-xl self-center aspect-square" type="checkbox" />
                 <h2 className="ml-4 text-2xl">{serviços.serviço}</h2>
