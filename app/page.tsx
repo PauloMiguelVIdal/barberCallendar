@@ -1,6 +1,6 @@
 import Callendar from "./components/Callendar";
 import Horario from "./components/Horario";
-
+import { ArrowBigLeft, ArrowBigRight } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -10,9 +10,9 @@ export default function Home() {
           Barbearia
         </h1>
               <div className="w-full h-[50px] bg-white fixed flex items-center justify-around self-center">
-                <button className="w-[50px] h-[50px] bg-black rounded-full">-</button>
+                <button className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigLeft/></button>
                 <h1 className="text-[40px] text-black">21/05</h1>
-                <button className="w-[50px] h-[50px] bg-black rounded-full">+</button>
+                <button className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight/></button>
               </div>
       </header>
       <main className="flex-1 overflow-y-auto p-4">
