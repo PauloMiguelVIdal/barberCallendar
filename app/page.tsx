@@ -1,7 +1,7 @@
 import Callendar from "./components/Callendar";
 import Horario from "./components/Horario";
 import { ArrowBigLeft, ArrowBigRight, Calendar, Calendar1, CalendarCheck, CalendarDays } from 'lucide-react';
-
+import CallendarMonth from "./components/CallendarMonth";
 export default function Home() {
   return (
     <div className="h-screen flex flex-col justify-center bg-zinc-50">
@@ -18,7 +18,8 @@ export default function Home() {
         </div>
       </header>
       <main className="flex-1 overflow-y-auto p-8">
-        <Callendar />
+        {/* <Callendar /> */}
+        <CallendarMonth />
       </main>
       <footer className="border-t bg-black p-4 flex items-center justify-center">
         <div className="flex w-[90%] justify-center">
