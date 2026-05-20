@@ -45,18 +45,18 @@ export default function Home() {
           <div className="flex w-[60%] justify-between">
 
             <button onClick={() => setInterfaceView('day')} className={`flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square ${interfaceView === 'day' ? `bg-linear-to-br from-black to-[#D3AF37]` : `bg-linear-to-br from-black to-white/40`}`}>
-              <Calendar1 />
+              <Calendar1 color="white" />
             </button>
             <button onClick={() => setInterfaceView('week')} className={`flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square  ${interfaceView === 'week' ? `bg-linear-to-br from-black to-[#D3AF37]` : `bg-linear-to-br from-black to-white/40`}`}>
               <Calendar />
             </button>
             <button onClick={() => setInterfaceView('month')} className={`flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square ${interfaceView === 'month' ? `bg-linear-to-br from-black to-[#D3AF37]` : `bg-linear-to-br from-black to-white/40`}`}>
-              <CalendarDays />
+              <CalendarDays color="white" />
             </button>
           </div>
           <div className="w-[40%] flex justify-end">
             <button className="flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square  bg-linear-to-br from-black to-white/40">
-              <CalendarCheck />
+              <CalendarCheck color="white" />
             </button>
           </div>
         </div>
