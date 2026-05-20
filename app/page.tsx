@@ -25,7 +25,7 @@ export default function Home() {
   return (
 <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col justify-center bg-zinc-50">    <header>
       <div className="h-[100px] border-b bg-black">
-        <h1 className=" text-center text-[40px] p-4">
+        <h1 className=" text-center text-[40px] text-white p-4">
           BRAVE BOSS
         </h1>
       </div>

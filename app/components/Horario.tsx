@@ -23,10 +23,10 @@ const estadoOcupação = horario.ocupado ? 'ocupado': 'livre'
 
         <button disabled={horario.ocupado} onClick={() => onSelecionar(horario)} className={`  w-full rounded-xl h-[80px] mt-[10px]  ${horario.ocupado?'bg-black/80':'bg-black'}   p-4 flex justify-between item-center`}>
             
-            <h2 className="self-start text-3xl">
+            <h2 className="self-start text-3xl text-white">
                 {estadoOcupação} 
             </h2>
-            <div className="self-end text-sm">
+            <div className="self-end text-sm text-white">
                 {horario.hora}
             </div>
         </button>
