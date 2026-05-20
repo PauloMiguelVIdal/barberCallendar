@@ -5,7 +5,7 @@ import { useState } from "react"
 import Horario from "./Horario";
 import Formulario from "./Formulario";
 import { horarioType } from '../types/horario'
-import { ArrowBigLeft, ArrowBigRight} from 'lucide-react';
+import { ArrowBigLeft, ArrowBigRight } from 'lucide-react';
 
 
 
@@ -24,7 +24,7 @@ export default function Callendar() {
       console.log(esseMês)
       setDiaVizualizado(1)
       setMesVizualizado(mesVizualizado + 1)
-    }else{
+    } else {
       setDiaVizualizado(diaVizualizado + 1)
     }
 
@@ -80,13 +80,13 @@ export default function Callendar() {
   }
 
   return (
-    <div className="w-full h-full"> 
-      <div className="w-full h-[80px] bg-white fixed flex items-center justify-self-center justify-around self-center">
+    <div className="w-full h-full">
+      <div className="w-full h-[80px] w-full bg-white flex items-center justify-self-center justify-around self-center">
         <button onClick={setAnteriorDia} disabled={esseDia === diaVizualizado} className={`flex w-[50px] h-[50px] ${esseDia === diaVizualizado ? 'bg-black/30' : 'bg-black'} rounded-full items-center justify-center`}><ArrowBigLeft /></button>
         {/* <h1 className="text-[40px] text- text-black">{diaVizualizado}/{esseMês}</h1>/ */}
-<h1 className="absolute left-1/2 -translate-x-1/2 text-[40px] text-black">
-  15/5
-</h1>        <button onClick={setProximoDia} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight /></button>
+        <h1 className="m-auto text-[40px] text-black">
+          15/5
+        </h1>        <button onClick={setProximoDia} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight /></button>
       </div>
       <div className="flex items-center flex-col">
 
