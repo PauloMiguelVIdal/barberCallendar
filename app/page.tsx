@@ -38,7 +38,7 @@ export default function Home() {
       </header>
       <main className="flex-1 overflow-y-auto p-8">
       {interfaceView === 'day' && ( <Callendar />)}
-      {interfaceView === 'week' && ( < CallendarWeek/>)}
+      {interfaceView === 'week' && (<CallendarWeek/>)}
       {interfaceView === 'month' && ( <CallendarMonth />)}
       </main>
       <footer className="border-t bg-black p-4 flex items-center justify-center">
