@@ -15,7 +15,7 @@ export default function Callendar() {
   const esseMês = new Date().getMonth()
   const esseDia = new Date().getDay()
   const esseMêsDays = new Date(esseAno, esseMês, 0).getDate()
-
+console.log(esseDia)
   const [diaVizualizado, setDiaVizualizado] = useState(esseDia)
   const [mesVizualizado, setMesVizualizado] = useState(esseMês)
 
@@ -83,10 +83,8 @@ export default function Callendar() {
     <div className="w-full h-full">
       <div className="w-full h-[80px] w-full bg-white flex items-center justify-self-center justify-around self-center">
         <button onClick={setAnteriorDia} disabled={esseDia === diaVizualizado} className={`flex w-[50px] h-[50px] ${esseDia === diaVizualizado ? 'bg-black/30' : 'bg-black'} rounded-full items-center justify-center`}><ArrowBigLeft color="white" /></button>
-        {/* <h1 className="text-[40px] text- text-black">{diaVizualizado}/{esseMês}</h1>/ */}
-        <h1 className="m-auto text-[40px] text-black">
-          15/5
-        </h1>        <button onClick={setProximoDia} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight color="white"/></button>
+        <h1 className="text-[40px] text- text-black">{diaVizualizado}/{esseMês}</h1>/
+         <button onClick={setProximoDia} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight color="white"/></button>
       </div>
       <div className="flex items-center flex-col">
 
