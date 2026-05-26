@@ -82,10 +82,12 @@ export default function CallendarWeek({ horario }) {
             </div>
             <div className="w-full h-[100%]">
                 <div className="grid w-full grid-cols-8 h-full grid-rows-1 bg-black ">
-                    <div className="grid-col-1">
+                    <div className="grid-col-1 mt-[15px]">
                         
                         {horarios.map((indice: horarioType) => (
-                            <h1 className="text-center">{indice.hora}</h1>
+                            <div className="pt-[21px]">
+                                <h1 className="text-center ">{indice.hora}</h1>
+                            </div>
                         ))}
                     </div>
                     {arrayThisWeek.map((index) => (

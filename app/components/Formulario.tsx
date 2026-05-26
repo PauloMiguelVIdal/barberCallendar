@@ -75,9 +75,9 @@ export default function Formulario({ horario, fecharModal, agendarHorario,
         .reduce((acc, serviço) =>
             acc + serviço.price, 0)
 
-
-
-    const [nome, setNome] = useState<string>('')
+        
+        const [nome, setNome] = useState<string>('')
+        const NomeFormatado = nome.toLocaleUpperCase;
     const [telefone, setTelefone] = useState<string>('')
     return (
 
@@ -88,9 +88,15 @@ export default function Formulario({ horario, fecharModal, agendarHorario,
                 <div>
                     {/* <h1 className="text-black text-xl text-center"> agendando horario para {horario}</h1> */}
 
-                    <input className="text-black bg-black/30 mt-6 pl-[10px] w-full self-center h-[40px] rounded-sm" onChange={(e) => setNome(e.target.value)} type="text" placeholder="NOME" />
-                    <input className="text-black focus:black bg-black/30 mt-3 pl-[10px] w-full self-center h-[40px] rounded-sm" onChange={(e) => setTelefone(e.target.value)} type="text" placeholder="TELEFONE" />
-                </div>
+                    <input 
+  type="text"    className="text-black focus:black bg-black/30 mt-3 pl-[10px] w-full self-center h-[40px] rounded-sm uppercase" 
+  onChange={(e) => setNome(e.target.value.toUpperCase())} placeholder="NOME" />
+<input 
+  type="text" 
+  placeholder="TELEFONE" 
+  className="text-black focus:black bg-black/30 mt-3 pl-[10px] w-full self-center h-[40px] rounded-sm uppercase" 
+  onChange={(e) => setTelefone(e.target.value.toUpperCase())} 
+/>                </div>
 <div className="bg-black w-full rounded-xl gap-4">
                 {services.map((serviço, index) => (
                     <Services key={serviço.serviço} serviços={serviço}
