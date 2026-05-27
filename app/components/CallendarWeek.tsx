@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { ArrowBigLeft, ArrowBigRight, } from 'lucide-react';
 import { horarioType } from "../types/horario";
+import { Span } from "next/dist/trace";
 
 
 
@@ -17,12 +18,12 @@ export default function CallendarWeek({ horario }) {
         { hora: '9:45', ocupado: false, telefone: '', nome: '' },
         { hora: '10:30', ocupado: false, telefone: '', nome: '' },
         { hora: '11:15', ocupado: false, telefone: '', nome: '' },
-        { hora: '12:00', ocupado: false, telefone: '', nome: '' },
-        { hora: '12:45', ocupado: true, telefone: '', nome: '' },
+        { hora: '12:00', ocupado: true, telefone: '', nome: '' },
+        { hora: '12:45', ocupado: false, telefone: '', nome: '' },
         { hora: '13:30', ocupado: false, telefone: '', nome: '' },
         { hora: '14:15', ocupado: false, telefone: '', nome: '' },
         { hora: '15:00', ocupado: false, telefone: '', nome: '' },
-        { hora: '15:45', ocupado: false, telefone: '', nome: '' },
+        { hora: '15:45', ocupado: true, telefone: '', nome: '' },
         { hora: '16:30', ocupado: false, telefone: '', nome: '' },
         { hora: '17:15', ocupado: false, telefone: '', nome: '' },
         { hora: '18:00', ocupado: false, telefone: '', nome: '' },
@@ -73,43 +74,88 @@ export default function CallendarWeek({ horario }) {
 
 
 
+
     return (
-        <div className="w-full h-full">
+<div className="w-full overflow-auto">
+    
             <div className="w-full h-[80px] w-full bg-white flex items-center justify-self-center justify-around self-center">
                 <button onClick={setAnteriorSemana} disabled={esseDia === diaInicioSemana} className={`flex w-[50px] h-[50px] ${esseDia === diaInicioSemana ? 'bg-black/30' : 'bg-black'} rounded-full items-center justify-center`}><ArrowBigLeft /></button>
                 <h1 className="text-[40px] text- text-black">{diaInicioSemana}/{esseMês} - {diaFimSemana}/{esseMês}</h1>/
                 <button onClick={setProximoSemana} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight /></button>
             </div>
-            <div className="w-full h-[100%]">
-                <div className="grid w-full grid-cols-8 h-full grid-rows-1 bg-black ">
-                    <div className="grid-col-1 mt-[15px]">
-                        
-                        {horarios.map((indice: horarioType) => (
-                            <div className="pt-[21px]">
-                                <h1 className="text-center ">{indice.hora}</h1>
-                            </div>
-                        ))}
-                    </div>
-                    {arrayThisWeek.map((index) => (
-                        <div key={index} className={`flex flex-col ${index > 16 ? 'bg-pink-500' : 'bg-white'} justify-center h-full w-full items-center`}>
-                            <div>
-                                {index}
-                            </div>
-                            <div className={`flex flex-col h-full items-center justify-around  ${index > 16 ? 'bg-pink-500' : 'bg-white'} bg-blue-500 w-full`}>
+    <div className="grid grid-cols-8 gap-2 mb-2">
+        
+        <div />
 
-
-                                {horarios.map((index) => (
-                                    <div key={index} className={`flex justify-center ${index.ocupado?'bg-white' :'bg-black'}  rounded-xl m-1 h-full aspect-square items-center`}>
-                                        {index.ocupado}
-                                    </div>
-                                ))
-                                }
-                            </div>
-                        </div>
-                    ))
-                    }
-                </div>
+        {arrayThisWeek.map((dia) => (
+            <div
+                key={dia}
+                className="
+                    aspect-square
+                    rounded-xl
+                    bg-black
+                    text-white
+                    flex
+                    items-center
+                    justify-center
+                    font-semibold
+                "
+            >
+                {dia}
             </div>
-        </div>
+        ))}
+    </div>
+
+    {/* Horários */}
+    <div className="flex flex-col gap-2">
+        {horarios.map((horario) => (
+            <div
+                key={horario.hora}
+                className="grid grid-cols-8 gap-2"
+            >
+
+                {/* Hora */}
+                <div
+                    className="
+                        aspect-square
+                        rounded-xl
+                        bg-zinc-200
+                        flex
+                        items-center
+                        justify-center
+                        text-xs
+                        font-medium
+                    "
+                >
+                    {horario.hora}
+                </div>
+
+                {/* Dias */}
+                {arrayThisWeek.map((dia) => (
+                    <div
+                        key={`${dia}-${horario.hora}`}
+                        className={`
+                            aspect-square
+                            rounded-xl
+                            transition-all
+                            cursor-pointer
+                            flex
+                            items-center
+                            justify-center
+                            ${horario.ocupado
+                                ? 'bg-black'
+                                : 'bg-black/40'}
+                                `}
+                                >
+                        <span    className={` w-[10px] h-[10px] rounded-full ${horario.ocupado
+                                ? 'bg-black'
+                                : 'bg-white'}
+                                `}></span>
+                    </div>
+                ))}
+            </div>
+        ))}
+    </div>
+</div>
     )
 }
