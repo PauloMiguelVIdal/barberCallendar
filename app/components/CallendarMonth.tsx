@@ -13,7 +13,7 @@ export default function CallendarMonth() {
     const monthsdays31: string[] = ['Janeiro', 'Março', 'Maio', 'Julho', 'Agosto', 'Outubro', 'Dezembro']
     const diaSemanaNome = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
     const esseAno = new Date().getFullYear()
-const hoje = new Date().getDate()
+    const hoje = new Date().getDate()
 
     const esseMes = new Date().getMonth()
     console.log(esseMes)
@@ -89,22 +89,22 @@ const hoje = new Date().getDate()
         i <= diasMesAnterior;
         i++
     ) {
-calendario.push({
-    dia: i,
-    atual: false,
-    hoje: false,
-    passado: false
-})
+        calendario.push({
+            dia: i,
+            atual: false,
+            hoje: false,
+            passado: false
+        })
     }
 
     // mês atual
     for (let i = 1; i <= diasNoMes; i++) {
-calendario.push({
-    dia: i,
-    atual: true,
-    hoje: i === hoje && mesVisualizado === esseMes,
-    passado: i < hoje && mesVisualizado === esseMes
-})
+        calendario.push({
+            dia: i,
+            atual: true,
+            hoje: i === hoje && mesVisualizado === esseMes,
+            passado: i < hoje && mesVisualizado === esseMes
+        })
     }
 
     // próximo mês
@@ -128,38 +128,44 @@ calendario.push({
                 <button onClick={setProximoMes} disabled={esseMes + 1 === mesVisualizado} className={`flex w-[50px] h-[50px] ${esseMes + 1 === mesVisualizado ? 'bg-black/30' : 'bg-black'} rounded-full items-center justify-center`}><ArrowBigRight /></button>
             </div>
             <div className="w-full h-[60%] ">
-                <div className="grid grid-cols-7 gap-2">                    
+                <div className="grid grid-cols-7 gap-2">
                     {diaSemanaNome.map((index) => (
-                    <div className="text-sm"
-                        key={index}
-                    >
-                        {index}
-                    </div>
-                ))}
+                        <div className="text-sm text-black"
+                            key={index}
+                        >
+                            {index}
+                        </div>
+                    ))}
                     {calendario.map((item, index) => (
+                      
                         <div
                             key={index}
                             className={`aspect-square w-full
-            rounded-xl
-            flex
-            justify-center
-            text-sm
-            font-medium
-            transition-all
-            pt-2
-${
-    item.hoje
-        ? 'bg-yellow-500 text-black'
-        : item.passado
-            ? 'bg-black/60 text-zinc-400'
-            : item.atual
-                ? 'bg-black text-white'
-                : 'bg-black/10 text-zinc-500'
-}
+                                    rounded-xl
+                                    flex
+                                    justify-center items-center
+                                    text-sm
+                                    font-medium
+                                    transition-all
+                                    flex-col
+                                    gap-[15px]
+                                    pt-2
+                                    ${item.hoje
+                                    ? 'bg-yellow-500 text-black'
+                                    : item.passado
+                                        ? 'bg-black/60 text-zinc-400'
+                                        : item.atual
+                                            ? 'bg-black text-white'
+                                            : 'bg-black/10 text-zinc-500'
+                                }
                                     `}
-                        >
+                                    >
                             {item.dia}
-                        </div>
+                            <span className={` w-[10px] h-[10px] rounded-full ${item.hoje
+                                ? 'bg-white'
+                                :  item.atual? 'bg-white' : 'bg-black/20'} 
+                                `}></span>
+                                </div>
                     ))}
                 </div>
             </div>
