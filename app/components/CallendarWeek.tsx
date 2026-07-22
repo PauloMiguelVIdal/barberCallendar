@@ -1,163 +1,529 @@
 'use client'
-import { useState } from "react"
-import { ArrowBigLeft, ArrowBigRight, } from 'lucide-react';
-import { horarioType } from "../types/horario";
-import { Span } from "next/dist/trace";
+
+import { ArrowBigLeft, ArrowBigRight } from 'lucide-react'
+
+import { horarioType } from '../types/horario'
+import {
+    useCentralDados,
+    useAgendamentos
+} from './PersistData'
 
 
+export default function CallendarWeek() {
 
-export default function CallendarWeek({ horario }) {
-    const [dataVisualizada, setDataVisualizada] = useState(new Date())
+    // =========================================================
+    // CONTEXT - DATA
+    // =========================================================
+
+    const {
+        dataVisualizada,
+        proximaSemana,
+        semanaAnterior,
+        definirDataVisualizada,
+        selecionarHorario,
+        setInterfaceView
+    } = useCentralDados()
+
+    // =========================================================
+    // CONTEXT - AGENDAMENTOS
+    // =========================================================
+
+    const {
+        agendamentos
+    } = useAgendamentos()
+
+
+    // =========================================================
+    // HORÁRIOS DISPONÍVEIS
+    // =========================================================
+
+    const horarios: horarioType[] = [
+
+        { hora: '9:00', ocupado: false },
+
+        { hora: '9:45', ocupado: false },
+
+        { hora: '10:30', ocupado: false },
+
+        { hora: '11:15', ocupado: false },
+
+        { hora: '12:00', ocupado: false },
+
+        { hora: '12:45', ocupado: false },
+
+        { hora: '13:30', ocupado: false },
+
+        { hora: '14:15', ocupado: false },
+
+        { hora: '15:00', ocupado: false },
+
+        { hora: '15:45', ocupado: false },
+
+        { hora: '16:30', ocupado: false },
+
+        { hora: '17:15', ocupado: false },
+
+        { hora: '18:00', ocupado: false },
+
+        { hora: '18:45', ocupado: false },
+
+        { hora: '19:30', ocupado: false }
+
+    ]
+
+
+    // =========================================================
+    // INÍCIO DA SEMANA
+    // =========================================================
+
+    /*
+      getDay():
+  
+      Domingo = 0
+      Segunda = 1
+      Terça = 2
+      ...
+      Sábado = 6
+    */
 
     const inicioSemana = new Date(dataVisualizada)
 
+    inicioSemana.setHours(0, 0, 0, 0)
+
     inicioSemana.setDate(
-        dataVisualizada.getDate() - dataVisualizada.getDay()
+        dataVisualizada.getDate() -
+        dataVisualizada.getDay()
     )
 
 
-    const diaSemanaNome = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    function selecionarHorarioDaSemana(
+        dia: Date,
+        hora: string
+    ) {
 
-    const [horarios, setHorarios] = useState<horarioType[]>([
-        { hora: '9:00', ocupado: false, telefone: '', nome: '' },
-        { hora: '9:45', ocupado: false, telefone: '', nome: '' },
-        { hora: '10:30', ocupado: false, telefone: '', nome: '' },
-        { hora: '11:15', ocupado: false, telefone: '', nome: '' },
-        { hora: '12:00', ocupado: true, telefone: '', nome: '' },
-        { hora: '12:45', ocupado: false, telefone: '', nome: '' },
-        { hora: '13:30', ocupado: false, telefone: '', nome: '' },
-        { hora: '14:15', ocupado: false, telefone: '', nome: '' },
-        { hora: '15:00', ocupado: false, telefone: '', nome: '' },
-        { hora: '15:45', ocupado: true, telefone: '', nome: '' },
-        { hora: '16:30', ocupado: false, telefone: '', nome: '' },
-        { hora: '17:15', ocupado: false, telefone: '', nome: '' },
-        { hora: '18:00', ocupado: false, telefone: '', nome: '' },
-        { hora: '18:45', ocupado: false, telefone: '', nome: '' },
-        { hora: '19:30', ocupado: false, telefone: '', nome: '' }
-    ]);
+        definirDataVisualizada(dia)
 
+        selecionarHorario(hora)
 
+        setInterfaceView('day')
 
-    const diasSemana = []
-
-    for (let i = 0; i < 7; i++) {
-        const dia = new Date(inicioSemana)
-
-        dia.setDate(inicioSemana.getDate() + i)
-
-        diasSemana.push(dia)
     }
 
-const primeiroDia = diasSemana[0]
-const ultimoDia = diasSemana[6]
+    // =========================================================
+    // DIAS DA SEMANA
+    // =========================================================
+
+    const diasSemana: Date[] = []
+
+    for (let i = 0; i < 7; i++) {
+
+        const dia = new Date(inicioSemana)
+
+        dia.setDate(
+            inicioSemana.getDate() + i
+        )
+
+        diasSemana.push(dia)
+
+    }
+
+
+    // =========================================================
+    // PRIMEIRO E ÚLTIMO DIA
+    // =========================================================
+
+    const primeiroDia =
+        diasSemana[0]
+
+    const ultimoDia =
+        diasSemana[6]
+
+    const hoje = new Date()
+
+    hoje.setHours(0, 0, 0, 0)
+
+    const inicioSemanaAtual = new Date(hoje)
+
+    inicioSemanaAtual.setDate(
+        hoje.getDate() - hoje.getDay()
+    )
+
+    inicioSemanaAtual.setHours(0, 0, 0, 0)
 
 
 
-function proximaSemana() {
-  const novaData = new Date(dataVisualizada)
+    const estaNaSemanaAtual =
+        inicioSemana.getTime() ===
+        inicioSemanaAtual.getTime()
 
-  novaData.setDate(novaData.getDate() + 7)
+    // =========================================================
+    // FORMATAR DATA
+    // =========================================================
 
-  setDataVisualizada(novaData)
-}
+    function formatarData(data: Date) {
 
-function semanaAnterior() {
-  const novaData = new Date(dataVisualizada)
+        return `${data.getFullYear()}-${String(
+            data.getMonth() + 1
+        ).padStart(2, '0')}-${String(
+            data.getDate()
+        ).padStart(2, '0')}`
 
-  novaData.setDate(novaData.getDate() - 7)
+    }
 
-  setDataVisualizada(novaData)
-}
+    function abrirDia(
+        dia: Date,
+        hora: string
+    ) {
+
+        selecionarData(dia)
+
+        selecionarHorario(hora)
+
+        setInterfaceView('day')
+
+    }
+
+
+    // =========================================================
+    // VERIFICAR SE HORÁRIO ESTÁ OCUPADO
+    // =========================================================
+
+    function horarioEstaOcupado(
+        dia: Date,
+        hora: string
+    ) {
+
+        const data = formatarData(dia)
+
+        return agendamentos.some(
+            (agendamento) =>
+
+                agendamento.data === data &&
+
+                agendamento.hora === hora
+
+        )
+
+    }
+
+
+    // =========================================================
+    // NOMES DOS DIAS
+    // =========================================================
+
+    const diaSemanaNome = [
+
+        'Domingo',
+
+        'Segunda-feira',
+
+        'Terça-feira',
+
+        'Quarta-feira',
+
+        'Quinta-feira',
+
+        'Sexta-feira',
+
+        'Sábado'
+
+    ]
+
+
+    // =========================================================
+    // RENDER
+    // =========================================================
 
     return (
+
         <div className="w-full overflow-auto">
 
-            <div className="w-full h-[80px] w-full bg-white flex items-center justify-self-center justify-around self-center">
-                <button onClick={semanaAnterior} className={`flex w-[50px] h-[50px] 
 
-                    rounded-full items-center justify-center`}><ArrowBigLeft /></button>
-<h1 className="text-[40px] text-black">
-  {primeiroDia.getDate()}/{primeiroDia.getMonth() + 1}
-  {" - "}
-  {ultimoDia.getDate()}/{ultimoDia.getMonth() + 1}
-</h1>                <button onClick={proximaSemana} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight /></button>
+            {/* =====================================================
+          CABEÇALHO
+      ====================================================== */}
+
+            <div className="
+        w-full
+        h-[80px]
+        bg-white
+        flex
+        items-center
+        justify-around
+      ">
+
+
+                {/* SEMANA ANTERIOR */}
+
+                <button
+                    onClick={semanaAnterior}
+                    disabled={estaNaSemanaAtual}
+                    className={`
+    flex
+    w-[50px]
+    h-[50px]
+    rounded-full
+    items-center
+    justify-center
+
+    ${estaNaSemanaAtual
+                            ? 'bg-black/30 cursor-not-allowed'
+                            : 'bg-black'
+                        }
+  `}
+                >
+
+
+
+                    <ArrowBigLeft color="white" />
+
+                </button>
+
+
+                {/* PERÍODO */}
+
+                <h1 className="
+          text-[25px]
+          text-black
+          font-semibold
+          text-center
+        ">
+
+                    {primeiroDia.getDate()}
+                    /
+                    {primeiroDia.getMonth() + 1}
+
+                    {' - '}
+
+                    {ultimoDia.getDate()}
+                    /
+                    {ultimoDia.getMonth() + 1}
+
+                </h1>
+
+
+                {/* PRÓXIMA SEMANA */}
+
+                <button
+
+                    onClick={proximaSemana}
+
+                    className="
+            flex
+            w-[50px]
+            h-[50px]
+            bg-black
+            rounded-full
+            items-center
+            justify-center
+          "
+
+                >
+
+                    <ArrowBigRight color="white" />
+
+                </button>
+
+
             </div>
-            <div className="grid grid-cols-8 gap-2 mb-2">
+
+
+            {/* =====================================================
+          CABEÇALHO DOS DIAS
+      ====================================================== */}
+
+            <div className="
+        grid
+        grid-cols-8
+        gap-2
+        mb-2
+      ">
+
+
+                {/* ESPAÇO DO HORÁRIO */}
 
                 <div />
 
-                {diasSemana.map((dia) => (
+
+                {/* DIAS */}
+
+                {diasSemana.map((dia, index) => (
+
                     <div
-                        key={dia.getDate()}
+
+                        key={formatarData(dia)}
+
                         className="
-                    aspect-square
-                    rounded-xl
-                    bg-black
-                    text-white
-                    flex
-                    items-center
-                    justify-center
-                    font-semibold
-                "
+              aspect-square
+              rounded-xl
+              bg-black
+              text-white
+              flex
+              flex-col
+              items-center
+              justify-center
+              font-semibold
+            "
+
                     >
-                       {dia.getDate()}
+
+                        <span className="text-xs">
+
+                            {diaSemanaNome[index].slice(0, 3)}
+
+                        </span>
+
+                        <span className="text-lg">
+
+                            {dia.getDate()}
+
+                        </span>
+
                     </div>
+
                 ))}
+
+
             </div>
 
-            {/* Horários */}
-            <div className="flex flex-col gap-2">
+
+            {/* =====================================================
+          HORÁRIOS
+      ====================================================== */}
+
+            <div className="
+        flex
+        flex-col
+        gap-2
+      ">
+
+
                 {horarios.map((horario) => (
+
                     <div
+
                         key={horario.hora}
-                        className="grid grid-cols-8 gap-2"
+
+                        className="
+              grid
+              grid-cols-8
+              gap-2
+            "
                     >
 
-                        {/* Hora */}
-                        <div
-                            className="
-                        aspect-square
-                        rounded-xl
-                        bg-black
-                        flex
-                        items-center
-                        justify-center
-                        text-xs
-                        font-medium
-                    "
-                        >
+
+                        {/* =============================================
+                HORA
+            ============================================== */}
+
+                        <div className="
+              aspect-square
+              rounded-xl
+              bg-black
+              text-white
+              flex
+              items-center
+              justify-center
+              text-xs
+              font-medium
+            ">
+
                             {horario.hora}
+
                         </div>
 
-                        {/* Dias */}
-                        {diasSemana.map((dia) => (
-                            <div
-                                key={`${dia}-${horario.hora}`}
-                                className={`
-                            aspect-square
-                            rounded-xl
-                            transition-all
-                            cursor-pointer
-                            flex
-                            flex-col
-                            items-center
-                            justify-center
-                            ${horario.ocupado
-                                        ? 'bg-black'
-                                        : 'bg-black/40'}
-                                `}
-                            >
-                                {horario.ocupado ? 'ocupa' : 'disp'}
-                                <span className={` w-[10px] h-[10px] rounded-full ${horario.ocupado
-                                    ? 'bg-black'
-                                    : 'bg-white'}
-                                    `}>
-                                </span>
-                            </div>
-                        ))}
+
+                        {/* =============================================
+                DIAS
+            ============================================== */}
+
+                        {diasSemana.map((dia) => {
+
+
+                            const ocupado =
+                                horarioEstaOcupado(
+                                    dia,
+                                    horario.hora
+                                )
+
+
+                            return (
+
+                                <div
+                                    key={`${formatarData(dia)}-${horario.hora}`}
+                                    onClick={() => {
+
+                                        if (!ocupado) {
+
+                                            selecionarHorarioDaSemana(
+                                                dia,
+                                                horario.hora
+                                            )
+
+                                        }
+
+                                    }}
+                                    className={`
+    aspect-square
+    rounded-xl
+    transition-all
+    flex
+    flex-col
+    items-center
+    justify-center
+
+    ${ocupado
+                                            ? 'bg-black cursor-not-allowed'
+                                            : 'bg-black/40 cursor-pointer hover:bg-[#D3AF37]'
+                                        }
+  `}
+                                >
+
+
+                                    <span className="text-white text-xs">
+
+                                        {ocupado
+                                            ? 'ocupado'
+                                            : 'disponível'
+                                        }
+
+                                    </span>
+
+
+                                    <span
+
+                                        className={`
+                      w-[10px]
+                      h-[10px]
+                      rounded-full
+
+                      ${ocupado
+
+                                                ? 'bg-[#D3AF37]'
+
+                                                : 'bg-white'
+                                            }
+                    `}
+
+                                    />
+
+                                </div>
+
+                            )
+
+                        })}
+
+
                     </div>
+
                 ))}
+
+
             </div>
+
+
         </div>
+
     )
+
 }

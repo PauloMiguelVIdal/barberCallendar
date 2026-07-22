@@ -1,66 +1,237 @@
 'use client'
 
-import Callendar from "./components/Callendar";
-import Horario from "./components/Horario";
-import { ArrowBigLeft, ArrowBigRight, Calendar, Calendar1, CalendarCheck, CalendarDays } from 'lucide-react';
-import CallendarMonth from "./components/CallendarMonth";
-import { useState } from "react";
-import CallendarWeek from "./components/CallendarWeek";
+import Callendar from "./components/Callendar"
+import CallendarWeek from "./components/CallendarWeek"
+import CallendarMonth from "./components/CallendarMonth"
+
+import {
+  CentralDadosProvider,
+  useCentralDados
+} from "./components/PersistData"
+
+import {
+  Calendar,
+  Calendar1,
+  CalendarDays,
+  CalendarCheck
+} from 'lucide-react'
+
+
 export default function Home() {
 
+  return (
+
+    <CentralDadosProvider>
+
+      <HomeContent />
+
+    </CentralDadosProvider>
+
+  )
+
+}
 
 
-  const [interfaceView, setInterfaceView] = useState('day')
+function HomeContent() {
 
-
-
-
-
-
-
-
-
+  const {
+    interfaceView,
+    setInterfaceView
+  } = useCentralDados()
 
 
   return (
-<div className="h-screen w-full max-w-[600px] mx-auto flex flex-col justify-center bg-zinc-50">    <header>
-      <div className="h-[100px] border-b bg-black">
-        <h1 className=" text-center text-[40px] text-white p-4">
-          BRAVE BOSS
-        </h1>
-      </div>
-      {/* <div className="w-full h-[80px] bg-white fixed flex items-center justify-around self-center">
-          <button onClick={setAnteriorDia} disabled={esseDia === diaVizualizado} className={`flex w-[50px] h-[50px] ${esseDia === diaVizualizado ? 'bg-black/30' : 'bg-black'} rounded-full items-center justify-center`}><ArrowBigLeft /></button>
-          <h1 className="text-[40px] text- text-black">{diaVizualizado}/{esseMês}</h1>/
-          <button onClick={setProximoDia} className="flex w-[50px] h-[50px] bg-black rounded-full items-center justify-center"><ArrowBigRight /></button>
-        </div> */}
-    </header>
+
+    <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col bg-zinc-50">
+
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
+      <header>
+
+        <div className="h-[100px] border-b bg-black">
+
+          <h1 className="text-center text-[40px] text-white p-4">
+            BRAVE BOSS
+          </h1>
+
+        </div>
+
+      </header>
+
+
+      {/* =================================================
+          CONTEÚDO
+      ================================================= */}
+
       <main className="flex-1 overflow-y-auto p-8 w-full">
-        {interfaceView === 'day' && (<Callendar />)}
-        {interfaceView === 'week' && (<CallendarWeek />)}
-        {interfaceView === 'month' && (<CallendarMonth />)}
+
+        {interfaceView === 'day' && (
+          <Callendar />
+        )}
+
+        {interfaceView === 'week' && (
+          <CallendarWeek />
+        )}
+
+        {interfaceView === 'month' && (
+          <CallendarMonth />
+        )}
+
       </main>
-      <footer className="border-t bg-black p-4 flex items-center justify-center">
-        <div className="flex w-[90%] justify-center">
+
+
+      {/* =================================================
+          FOOTER
+      ================================================= */}
+
+      <footer className="border-t bg-black p-4">
+
+        <div className="flex w-full justify-between">
+
+
+          {/* =============================================
+              NAVEGAÇÃO
+          ============================================= */}
+
           <div className="flex w-[60%] justify-between">
 
-            <button onClick={() => setInterfaceView('day')} className={`flex justify-center rounded-xl focus-visible:outline-2 items-center w-[50px] aspect-square ${interfaceView === 'day' ? `bg-linear-to-br from-black to-[#D3AF37]` : `bg-linear-to-br from-black to-white/40`}`}>
+
+            {/* DIA */}
+
+            <button
+
+              onClick={() =>
+                setInterfaceView('day')
+              }
+
+              className={`
+                flex
+                justify-center
+                rounded-xl
+                border
+                border-white
+                items-center
+                w-[50px]
+                aspect-square
+
+                ${
+                  interfaceView === 'day'
+
+                    ? 'bg-linear-to-br from-black to-[#D3AF37]'
+
+                    : 'bg-linear-to-br from-black to-white/40'
+                }
+              `}
+            >
+
               <Calendar1 color="white" />
+
             </button>
-            <button onClick={() => setInterfaceView('week')} className={`flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square  ${interfaceView === 'week' ? `bg-linear-to-br from-black to-[#D3AF37]` : `bg-linear-to-br from-black to-white/40`}`}>
-              <Calendar />
+
+
+            {/* SEMANA */}
+
+            <button
+
+              onClick={() =>
+                setInterfaceView('week')
+              }
+
+              className={`
+                flex
+                justify-center
+                rounded-xl
+                border
+                border-white
+                items-center
+                w-[50px]
+                aspect-square
+
+                ${
+                  interfaceView === 'week'
+
+                    ? 'bg-linear-to-br from-black to-[#D3AF37]'
+
+                    : 'bg-linear-to-br from-black to-white/40'
+                }
+              `}
+            >
+
+              <Calendar color="white" />
+
             </button>
-            <button onClick={() => setInterfaceView('month')} className={`flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square ${interfaceView === 'month' ? `bg-linear-to-br from-black to-[#D3AF37]` : `bg-linear-to-br from-black to-white/40`}`}>
+
+
+            {/* MÊS */}
+
+            <button
+
+              onClick={() =>
+                setInterfaceView('month')
+              }
+
+              className={`
+                flex
+                justify-center
+                rounded-xl
+                border
+                border-white
+                items-center
+                w-[50px]
+                aspect-square
+
+                ${
+                  interfaceView === 'month'
+
+                    ? 'bg-linear-to-br from-black to-[#D3AF37]'
+
+                    : 'bg-linear-to-br from-black to-white/40'
+                }
+              `}
+            >
+
               <CalendarDays color="white" />
+
             </button>
+
+
           </div>
-          <div className="w-[40%] flex justify-end">
-            <button className="flex justify-center rounded-xl border-solid border-white border-1 items-center w-[50px] aspect-square  bg-linear-to-br from-black to-white/40">
-              <CalendarCheck color="white" />
-            </button>
-          </div>
+
+
+          {/* =============================================
+              AGENDAMENTOS
+          ============================================= */}
+
+          <button
+
+            className="
+              flex
+              justify-center
+              rounded-xl
+              border
+              border-white
+              items-center
+              w-[50px]
+              aspect-square
+              bg-linear-to-br
+              from-black
+              to-white/40
+            "
+          >
+
+            <CalendarCheck color="white" />
+
+          </button>
+
+
         </div>
+
       </footer>
+
     </div>
-  );
+
+  )
+
 }
