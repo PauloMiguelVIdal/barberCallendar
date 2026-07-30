@@ -1,3 +1,4 @@
 export type horarioType = {
-  hora: string
+  hora: string,
+  ocupado:boolean
 }
