@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -25,23 +26,16 @@ import {
 
 export default function Callendar() {
 
-
   // =========================================================
   // CONTEXT
   // =========================================================
 
   const {
-
     dataVisualizada,
-
     horarioSelecionado,
-
     selecionarHorario,
-
     proximoDia,
-
     diaAnterior
-
   } = useCentralDados()
 
 
@@ -50,11 +44,9 @@ export default function Callendar() {
   // =========================================================
 
   const {
-
     agendamentos,
-
-    adicionarAgendamento
-
+    adicionarAgendamento,
+    adicionarAgendamentoCliente
   } = useAgendamentos()
 
 
@@ -97,7 +89,7 @@ export default function Callendar() {
 
 
   // =========================================================
-  // HORÁRIOS
+  // HORÁRIOS DISPONÍVEIS
   // =========================================================
 
   const horarios: horarioType[] = [
@@ -140,7 +132,6 @@ export default function Callendar() {
   // =========================================================
 
   const dataFormatada =
-
     `${anoVisualizado}-${String(
       mesVisualizado + 1
     ).padStart(2, '0')}-${String(
@@ -149,7 +140,133 @@ export default function Callendar() {
 
 
   // =========================================================
-  // ABRIR MODAL QUANDO VEM DA SEMANA
+  // CONVERTER HORÁRIO PARA MINUTOS
+  // =========================================================
+
+  function horarioParaMinutos(
+    horario: string
+  ) {
+
+    const [
+      horas,
+      minutos
+    ] = horario
+      .split(':')
+      .map(Number)
+
+
+    return (
+      horas * 60 +
+      minutos
+    )
+
+  }
+
+
+  // =========================================================
+  // VERIFICAR SE UM HORÁRIO ESTÁ OCUPADO
+  // =========================================================
+
+  function horarioEstaOcupado(
+    horarioVerificado: string
+  ) {
+
+    const DURACAO_BLOCO = 45
+
+
+    const minutoVerificado =
+      horarioParaMinutos(
+        horarioVerificado
+      )
+
+
+    return agendamentos.some(
+
+      agendamento => {
+
+        // =====================================================
+        // VERIFICAR DATA
+        // =====================================================
+
+        if (
+          agendamento.data !==
+          dataFormatada
+        ) {
+
+          return false
+
+        }
+
+
+        // =====================================================
+        // HORÁRIO DE INÍCIO
+        // =====================================================
+
+        const inicioAgendamento =
+          horarioParaMinutos(
+            agendamento.hora
+          )
+
+
+        // =====================================================
+        // BLOCOS OCUPADOS
+        // =====================================================
+
+        const blocosOcupados =
+
+          agendamento.blocos ??
+
+          (
+            agendamento.duracao
+
+              ? Math.ceil(
+                  agendamento.duracao /
+                  DURACAO_BLOCO
+                )
+
+              : 1
+          )
+
+
+        // =====================================================
+        // FINAL DO AGENDAMENTO
+        // =====================================================
+
+        const fimAgendamento =
+
+          inicioAgendamento +
+
+          (
+            blocosOcupados *
+            DURACAO_BLOCO
+          )
+
+
+        // =====================================================
+        // VERIFICAR CONFLITO
+        // =====================================================
+
+        return (
+
+          minutoVerificado >=
+          inicioAgendamento
+
+          &&
+
+          minutoVerificado <
+          fimAgendamento
+
+        )
+
+      }
+
+    )
+
+  }
+
+
+  // =========================================================
+  // ABRIR MODAL QUANDO VEM DO CALENDÁRIO SEMANAL
   // =========================================================
 
   useEffect(() => {
@@ -161,8 +278,8 @@ export default function Callendar() {
     }
 
 
-    const horarioEncontrado =
-      horarios.find(
+    const horarioExiste =
+      horarios.some(
 
         horario =>
           horario.hora ===
@@ -171,14 +288,16 @@ export default function Callendar() {
       )
 
 
-    if (!horarioEncontrado) {
+    if (!horarioExiste) {
 
       return
 
     }
 
 
-    setModalAgendamento(true)
+    setModalAgendamento(
+      true
+    )
 
   }, [
     horarioSelecionado
@@ -186,48 +305,94 @@ export default function Callendar() {
 
 
   // =========================================================
-  // AGENDAR
+  // AGENDAR HORÁRIO
+  // =========================================================
+  //
+  // IMPORTANTE:
+  //
+  // A data e o horário usados aqui são exatamente aqueles
+  // enviados pelo Formulario.
+  //
+  // Isso permite que o cliente:
+  //
+  // - altere o horário;
+  // - escolha uma sugestão;
+  // - escolha outro dia;
+  // - escolha o mesmo horário em outro dia.
+  //
   // =========================================================
 
   function agendarHorario(
+
     nome: string,
-    telefone: string
+
+    telefone: string,
+
+    data: string,
+
+    horario: string,
+
+    blocos: number,
+
+    duracao: number
+
   ) {
 
-    if (!horarioSelecionado) {
-
-      return
-
-    }
-
+    // =======================================================
+    // CRIAR AGENDAMENTO
+    // =======================================================
 
     const novoAgendamento = {
 
       id:
         crypto.randomUUID(),
 
-      data:
-        dataFormatada,
+      data,
 
       hora:
-        horarioSelecionado,
+        horario,
 
       nome,
 
-      telefone
+      telefone,
+
+      blocos,
+
+      duracao
 
     }
 
+
+    // =======================================================
+    // SALVAR NO SISTEMA
+    // =======================================================
 
     adicionarAgendamento(
       novoAgendamento
     )
 
 
+    // =======================================================
+    // SALVAR NO HISTÓRICO DO CLIENTE
+    // =======================================================
+
+    adicionarAgendamentoCliente(
+      novoAgendamento
+    )
+
+
+    // =======================================================
+    // FECHAR MODAL
+    // =======================================================
+
     setModalAgendamento(
       false
     )
 
+
+    // =======================================================
+    // LIMPAR HORÁRIO SELECIONADO
+    // =======================================================
 
     selecionarHorario(
       null
@@ -275,10 +440,15 @@ export default function Callendar() {
 
   return (
 
-    <div className="w-full h-full">
+    <div className="
+      w-full
+      h-full
+    ">
 
 
-      {/* CABEÇALHO */}
+      {/* =====================================================
+          CABEÇALHO
+      ====================================================== */}
 
       <div className="
         w-full
@@ -290,15 +460,21 @@ export default function Callendar() {
       ">
 
 
-        {/* ANTERIOR */}
+        {/* =================================================
+            DIA ANTERIOR
+        ================================================== */}
 
         <button
 
-          onClick={diaAnterior}
+          onClick={
+            diaAnterior
+          }
 
           disabled={
+
             dataVisualizada.getTime() ===
             hoje.getTime()
+
           }
 
           className={`
@@ -321,12 +497,16 @@ export default function Callendar() {
 
         >
 
-          <ArrowBigLeft color="white" />
+          <ArrowBigLeft
+            color="white"
+          />
 
         </button>
 
 
-        {/* DATA */}
+        {/* =================================================
+            DATA
+        ================================================== */}
 
         <h1 className="
           text-[25px]
@@ -341,11 +521,15 @@ export default function Callendar() {
         </h1>
 
 
-        {/* PRÓXIMO */}
+        {/* =================================================
+            PRÓXIMO DIA
+        ================================================== */}
 
         <button
 
-          onClick={proximoDia}
+          onClick={
+            proximoDia
+          }
 
           className="
             flex
@@ -359,7 +543,9 @@ export default function Callendar() {
 
         >
 
-          <ArrowBigRight color="white" />
+          <ArrowBigRight
+            color="white"
+          />
 
         </button>
 
@@ -367,7 +553,9 @@ export default function Callendar() {
       </div>
 
 
-      {/* MÊS */}
+      {/* =====================================================
+          MÊS
+      ====================================================== */}
 
       <div className="
         text-center
@@ -382,7 +570,9 @@ export default function Callendar() {
       </div>
 
 
-      {/* HORÁRIOS */}
+      {/* =====================================================
+          LISTA DE HORÁRIOS
+      ====================================================== */}
 
       <div className="
         flex
@@ -393,22 +583,22 @@ export default function Callendar() {
 
 
         {horarios.map(
+
           horario => {
 
+            // =================================================
+            // VERIFICAR SE O HORÁRIO ESTÁ OCUPADO
+            // =================================================
 
             const ocupado =
-              agendamentos.some(
-
-                agendamento =>
-
-                  agendamento.data ===
-                  dataFormatada &&
-
-                  agendamento.hora ===
-                  horario.hora
-
+              horarioEstaOcupado(
+                horario.hora
               )
 
+
+            // =================================================
+            // HORÁRIO COM ESTADO ATUALIZADO
+            // =================================================
 
             const horarioComEstado:
               horarioType = {
@@ -432,19 +622,41 @@ export default function Callendar() {
                   horarioComEstado
                 }
 
-                onSelecionar={
-                  horarioSelecionado => {
+                onSelecionar={(
+                  horarioClicado
+                ) => {
 
-                    selecionarHorario(
-                      horarioSelecionado.hora
-                    )
+                  // =================================================
+                  // IMPEDIR HORÁRIO OCUPADO
+                  // =================================================
 
-                    setModalAgendamento(
-                      true
-                    )
+                  if (
+                    horarioClicado.ocupado
+                  ) {
+
+                    return
 
                   }
-                }
+
+
+                  // =================================================
+                  // SELECIONAR HORÁRIO
+                  // =================================================
+
+                  selecionarHorario(
+                    horarioClicado.hora
+                  )
+
+
+                  // =================================================
+                  // ABRIR FORMULÁRIO
+                  // =================================================
+
+                  setModalAgendamento(
+                    true
+                  )
+
+                }}
 
               />
 
@@ -455,7 +667,9 @@ export default function Callendar() {
         )}
 
 
-        {/* FORMULÁRIO */}
+        {/* =================================================
+            FORMULÁRIO
+        ================================================== */}
 
         {
           modalAgendamento &&
@@ -467,6 +681,14 @@ export default function Callendar() {
 
               horario={
                 horarioSelecionado
+              }
+
+              data={
+                dataFormatada
+              }
+
+              agendamentos={
+                agendamentos
               }
 
               fecharModal={() => {
@@ -500,3 +722,4 @@ export default function Callendar() {
   )
 
 }
+

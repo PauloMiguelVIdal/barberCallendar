@@ -3,6 +3,7 @@
 import Callendar from "./components/Callendar"
 import CallendarWeek from "./components/CallendarWeek"
 import CallendarMonth from "./components/CallendarMonth"
+import Appointments from "./components/appointments"
 
 import {
   CentralDadosProvider,
@@ -79,6 +80,9 @@ function HomeContent() {
           <CallendarMonth />
         )}
 
+        {interfaceView === 'appointments' && (
+          <Appointments />
+        )}
       </main>
 
 
@@ -116,12 +120,11 @@ function HomeContent() {
                 w-[50px]
                 aspect-square
 
-                ${
-                  interfaceView === 'day'
+                ${interfaceView === 'day'
 
-                    ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                  ? 'bg-linear-to-br from-black to-[#D3AF37]'
 
-                    : 'bg-linear-to-br from-black to-white/40'
+                  : 'bg-linear-to-br from-black to-white/40'
                 }
               `}
             >
@@ -149,12 +152,11 @@ function HomeContent() {
                 w-[50px]
                 aspect-square
 
-                ${
-                  interfaceView === 'week'
+                ${interfaceView === 'week'
 
-                    ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                  ? 'bg-linear-to-br from-black to-[#D3AF37]'
 
-                    : 'bg-linear-to-br from-black to-white/40'
+                  : 'bg-linear-to-br from-black to-white/40'
                 }
               `}
             >
@@ -182,12 +184,11 @@ function HomeContent() {
                 w-[50px]
                 aspect-square
 
-                ${
-                  interfaceView === 'month'
+                ${interfaceView === 'month'
 
-                    ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                  ? 'bg-linear-to-br from-black to-[#D3AF37]'
 
-                    : 'bg-linear-to-br from-black to-white/40'
+                  : 'bg-linear-to-br from-black to-white/40'
                 }
               `}
             >
@@ -204,26 +205,38 @@ function HomeContent() {
               AGENDAMENTOS
           ============================================= */}
 
-          <button
+<button
 
-            className="
-              flex
-              justify-center
-              rounded-xl
-              border
-              border-white
-              items-center
-              w-[50px]
-              aspect-square
-              bg-linear-to-br
-              from-black
-              to-white/40
-            "
-          >
+    onClick={() =>
+        setInterfaceView('appointments')
+    }
 
-            <CalendarCheck color="white" />
+    className={`
+        flex
+        justify-center
+        rounded-xl
+        border
+        border-white
+        items-center
+        w-[50px]
+        aspect-square
 
-          </button>
+        ${
+            interfaceView === 'appointments'
+
+                ? 'bg-linear-to-br from-black to-[#D3AF37]'
+
+                : 'bg-linear-to-br from-black to-white/40'
+        }
+    `}
+
+>
+
+    <CalendarCheck
+        color="white"
+    />
+
+</button>
 
 
         </div>
