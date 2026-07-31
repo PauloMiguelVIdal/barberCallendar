@@ -43,7 +43,7 @@ function HomeContent() {
 
   return (
 
-    <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col bg-zinc-50">
+    <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col bg-[#121212]">
 
       {/* =================================================
           HEADER
@@ -51,9 +51,9 @@ function HomeContent() {
 
       <header>
 
-        <div className="h-[100px] border-b bg-black">
+        <div className="h-[100px] border-b border-[#2A2A2A] bg-[#121212]">
 
-          <h1 className="text-center text-[40px] text-white p-4">
+          <h1 className="text-center text-[40px] text-[#D3AF37] p-4 font-bold tracking-wider">
             BRAVE BOSS
           </h1>
 
@@ -66,7 +66,7 @@ function HomeContent() {
           CONTEÚDO
       ================================================= */}
 
-      <main className="flex-1 overflow-y-auto p-0 w-full">
+      <main className="flex-1 overflow-y-auto p-0 w-full bg-[#121212]">
 
         {interfaceView === 'day' && (
           <Callendar />
@@ -90,7 +90,7 @@ function HomeContent() {
           FOOTER
       ================================================= */}
 
-      <footer className="border-t bg-black p-4">
+      <footer className="border-t border-[#2A2A2A] bg-[#121212] p-4">
 
         <div className="flex w-full justify-between">
 
@@ -114,22 +114,27 @@ function HomeContent() {
                 flex
                 justify-center
                 rounded-xl
-                border
-                border-white
+                border-2
                 items-center
                 w-[50px]
                 aspect-square
+                transition-all
+                duration-200
 
-                ${interfaceView === 'day'
+                ${
+                  interfaceView === 'day'
 
-                  ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                    ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-                  : 'bg-linear-to-br from-black to-white/40'
+                    : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
                 }
               `}
             >
 
-              <Calendar1 color="white" />
+              <Calendar1 
+                color={interfaceView === 'day' ? '#D3AF37' : '#757575'} 
+                size={24}
+              />
 
             </button>
 
@@ -146,22 +151,27 @@ function HomeContent() {
                 flex
                 justify-center
                 rounded-xl
-                border
-                border-white
+                border-2
                 items-center
                 w-[50px]
                 aspect-square
+                transition-all
+                duration-200
 
-                ${interfaceView === 'week'
+                ${
+                  interfaceView === 'week'
 
-                  ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                    ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-                  : 'bg-linear-to-br from-black to-white/40'
+                    : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
                 }
               `}
             >
 
-              <Calendar color="white" />
+              <Calendar 
+                color={interfaceView === 'week' ? '#D3AF37' : '#757575'} 
+                size={24}
+              />
 
             </button>
 
@@ -178,22 +188,27 @@ function HomeContent() {
                 flex
                 justify-center
                 rounded-xl
-                border
-                border-white
+                border-2
                 items-center
                 w-[50px]
                 aspect-square
+                transition-all
+                duration-200
 
-                ${interfaceView === 'month'
+                ${
+                  interfaceView === 'month'
 
-                  ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                    ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-                  : 'bg-linear-to-br from-black to-white/40'
+                    : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
                 }
               `}
             >
 
-              <CalendarDays color="white" />
+              <CalendarDays 
+                color={interfaceView === 'month' ? '#D3AF37' : '#757575'} 
+                size={24}
+              />
 
             </button>
 
@@ -205,38 +220,40 @@ function HomeContent() {
               AGENDAMENTOS
           ============================================= */}
 
-<button
+          <button
 
-    onClick={() =>
-        setInterfaceView('appointments')
-    }
+            onClick={() =>
+              setInterfaceView('appointments')
+            }
 
-    className={`
-        flex
-        justify-center
-        rounded-xl
-        border
-        border-white
-        items-center
-        w-[50px]
-        aspect-square
+            className={`
+              flex
+              justify-center
+              rounded-xl
+              border-2
+              items-center
+              w-[50px]
+              aspect-square
+              transition-all
+              duration-200
 
-        ${
-            interfaceView === 'appointments'
+              ${
+                interfaceView === 'appointments'
 
-                ? 'bg-linear-to-br from-black to-[#D3AF37]'
+                  ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-                : 'bg-linear-to-br from-black to-white/40'
-        }
-    `}
+                  : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
+              }
+            `}
 
->
+          >
 
-    <CalendarCheck
-        color="white"
-    />
+            <CalendarCheck
+              color={interfaceView === 'appointments' ? '#D3AF37' : '#757575'} 
+              size={24}
+            />
 
-</button>
+          </button>
 
 
         </div>

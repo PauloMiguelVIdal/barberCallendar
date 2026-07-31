@@ -484,12 +484,12 @@ export default function Callendar() {
       <div className="
         w-full
         h-[80px]
-        bg-[#121212]
+       
         flex
         items-center
         justify-around
-        border-b
-        border-[#2A2A2A]
+        
+        
       ">
 
 

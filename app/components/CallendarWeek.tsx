@@ -1,4 +1,3 @@
-
 'use client'
 
 import { ArrowBigLeft, ArrowBigRight } from 'lucide-react'
@@ -328,7 +327,7 @@ export default function CallendarWeek() {
 
     return (
 
-        <div className="w-full overflow-auto">
+        <div className="w-full overflow-auto bg-[#121212] p-4 rounded-xl">
 
 
             {/* =====================================================
@@ -338,10 +337,13 @@ export default function CallendarWeek() {
             <div className="
                 w-full
                 h-[80px]
-                bg-white
+                bg-[#121212]
                 flex
                 items-center
                 justify-around
+                border-b
+                border-[#2A2A2A]
+                mb-4
             ">
 
 
@@ -360,16 +362,21 @@ export default function CallendarWeek() {
                         rounded-full
                         items-center
                         justify-center
+                        transition-all
+                        duration-200
 
                         ${estaNaSemanaAtual
-                            ? 'bg-black/30 cursor-not-allowed'
-                            : 'bg-black'
+                            ? 'bg-[#333333] cursor-not-allowed'
+                            : 'bg-[#D3AF37] hover:bg-[#C4A032] hover:scale-105'
                         }
                     `}
 
                 >
 
-                    <ArrowBigLeft color="white" />
+                    <ArrowBigLeft 
+                        color={estaNaSemanaAtual ? '#757575' : '#121212'} 
+                        size={24}
+                    />
 
                 </button>
 
@@ -378,8 +385,8 @@ export default function CallendarWeek() {
 
                 <h1 className="
                     text-[25px]
-                    text-black
-                    font-semibold
+                    text-[#FFFFFF]
+                    font-bold
                     text-center
                 ">
 
@@ -406,15 +413,22 @@ export default function CallendarWeek() {
                         flex
                         w-[50px]
                         h-[50px]
-                        bg-black
+                        bg-[#D3AF37]
                         rounded-full
                         items-center
                         justify-center
+                        hover:bg-[#C4A032]
+                        hover:scale-105
+                        transition-all
+                        duration-200
                     "
 
                 >
 
-                    <ArrowBigRight color="white" />
+                    <ArrowBigRight 
+                        color="#121212" 
+                        size={24}
+                    />
 
                 </button>
 
@@ -430,7 +444,7 @@ export default function CallendarWeek() {
                 grid
                 grid-cols-8
                 gap-2
-                mb-2
+                mb-4
             ">
 
 
@@ -450,6 +464,9 @@ export default function CallendarWeek() {
                         const passado =
                             dataEstaNoPassado(dia)
 
+                        const isHoje = 
+                            dia.getTime() === hoje.getTime()
+
 
                         return (
 
@@ -460,29 +477,44 @@ export default function CallendarWeek() {
                                 className={`
                                     aspect-square
                                     rounded-xl
-                                    text-white
                                     flex
                                     flex-col
                                     items-center
                                     justify-center
                                     font-semibold
+                                    transition-all
+                                    duration-200
+                                    border-2
 
                                     ${passado
-                                        ? 'bg-black/30'
-                                        : 'bg-black'
+                                        ? 'bg-[#333333] border-[#333333]'
+                                        : isHoje
+                                            ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
+                                            : 'bg-[#1E1E1E] border-[#2A2A2A]'
                                     }
                                 `}
 
                             >
 
-                                <span className="text-xs">
+                                <span className={`
+                                    text-xs
+                                    ${passado ? 'text-[#757575]' : 'text-[#A0A0A0]'}
+                                `}>
 
                                     {diaSemanaNome[index].slice(0, 3)}
 
                                 </span>
 
 
-                                <span className="text-lg">
+                                <span className={`
+                                    text-lg
+                                    ${passado 
+                                        ? 'text-[#757575]' 
+                                        : isHoje 
+                                            ? 'text-[#D3AF37]' 
+                                            : 'text-[#FFFFFF]'
+                                    }
+                                `}>
 
                                     {dia.getDate()}
 
@@ -493,7 +525,7 @@ export default function CallendarWeek() {
 
                                     <span className="
                                         text-[9px]
-                                        text-white/60
+                                        text-[#757575]
                                     ">
 
                                         indis.
@@ -548,13 +580,15 @@ export default function CallendarWeek() {
                             <div className="
                                 aspect-square
                                 rounded-xl
-                                bg-black
-                                text-white
+                                bg-[#1E1E1E]
+                                text-[#E0E0E0]
                                 flex
                                 items-center
                                 justify-center
                                 text-xs
                                 font-medium
+                                border
+                                border-[#2A2A2A]
                             ">
 
                                 {horario.hora}
@@ -616,21 +650,24 @@ export default function CallendarWeek() {
                                                 aspect-square
                                                 rounded-xl
                                                 transition-all
+                                                duration-200
                                                 flex
                                                 flex-col
                                                 items-center
                                                 justify-center
+                                                gap-1
+                                                border-2
 
                                                 ${
                                                     passado
 
-                                                        ? 'bg-zinc-200 cursor-not-allowed'
+                                                        ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
 
                                                         : ocupado
 
-                                                            ? 'bg-black cursor-not-allowed'
+                                                            ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
 
-                                                            : 'bg-black/40 cursor-pointer hover:bg-[#D3AF37]'
+                                                            : 'bg-[#1E1E1E] border-[#2A2A2A] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
                                                 }
                                             `}
 
@@ -638,12 +675,13 @@ export default function CallendarWeek() {
 
 
                                             <span className={`
-                                                text-xs
+                                                text-[10px]
+                                                font-medium
 
                                                 ${
-                                                    passado
-                                                        ? 'text-black/40'
-                                                        : 'text-white'
+                                                    passado || ocupado
+                                                        ? 'text-[#757575]'
+                                                        : 'text-[#E0E0E0]'
                                                 }
                                             `}>
 
@@ -651,28 +689,30 @@ export default function CallendarWeek() {
                                                     ? 'indis.'
                                                     : ocupado
                                                         ? 'ocupado'
-                                                        : 'disponível'
+                                                        : 'livre'
                                                 }
 
                                             </span>
 
 
-                                            <span
+                                            <div
                                                 className={`
                                                     w-[10px]
                                                     h-[10px]
                                                     rounded-full
+                                                    transition-all
+                                                    duration-200
 
                                                     ${
                                                         passado
 
-                                                            ? 'bg-black/20'
+                                                            ? 'bg-[#757575]'
 
                                                             : ocupado
 
                                                                 ? 'bg-[#D3AF37]'
 
-                                                                : 'bg-white'
+                                                                : 'bg-[#FFFFFF]'
                                                     }
                                                 `}
                                             />
@@ -702,4 +742,3 @@ export default function CallendarWeek() {
     )
 
 }
-

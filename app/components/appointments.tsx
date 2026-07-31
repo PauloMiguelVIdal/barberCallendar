@@ -8,7 +8,8 @@ import {
     Scissors,
     UserRound,
     Phone,
-    ArrowLeft
+    ArrowLeft,
+    X
 } from 'lucide-react'
 
 import {
@@ -137,21 +138,26 @@ function cancelarAgendamento() {
                 items-center
                 justify-center
                 gap-6
-                text-black
+                bg-[#121212]
+                text-[#E0E0E0]
+                p-4
+                rounded-xl
             ">
 
                 <div className="
                     w-[80px]
                     aspect-square
                     rounded-full
-                    bg-black
+                    bg-[#1E1E1E]
                     flex
                     items-center
                     justify-center
+                    border-2
+                    border-[#D3AF37]
                 ">
 
                     <CalendarCheck
-                        color="white"
+                        color="#D3AF37"
                         size={40}
                     />
 
@@ -169,6 +175,7 @@ function cancelarAgendamento() {
                     <h2 className="
                         text-xl
                         font-bold
+                        text-[#FFFFFF]
                     ">
 
                         Nenhum agendamento
@@ -178,7 +185,7 @@ function cancelarAgendamento() {
 
                     <p className="
                         text-sm
-                        text-zinc-500
+                        text-[#A0A0A0]
                     ">
 
                         Você ainda não possui
@@ -198,15 +205,19 @@ function cancelarAgendamento() {
                     }
 
                     className="
-                        bg-black
-                        text-white
+                        bg-[#D3AF37]
+                        text-[#121212]
                         px-6
                         py-3
                         rounded-xl
-                        font-semibold
+                        font-bold
                         flex
                         items-center
                         gap-2
+                        hover:bg-[#C4A032]
+                        transition-all
+                        duration-200
+                        hover:scale-105
                     "
 
                 >
@@ -235,7 +246,10 @@ function cancelarAgendamento() {
             flex
             flex-col
             gap-5
-            text-black
+            bg-[#121212]
+            p-4
+            rounded-xl
+            text-[#E0E0E0]
         ">
 
 
@@ -247,6 +261,9 @@ function cancelarAgendamento() {
                 flex
                 items-center
                 justify-between
+                border-b
+                border-[#2A2A2A]
+                pb-4
             ">
 
 
@@ -259,6 +276,7 @@ function cancelarAgendamento() {
                     <h1 className="
                         text-2xl
                         font-bold
+                        text-[#FFFFFF]
                     ">
 
                         Meus agendamentos
@@ -268,7 +286,7 @@ function cancelarAgendamento() {
 
                     <p className="
                         text-sm
-                        text-zinc-500
+                        text-[#A0A0A0]
                     ">
 
                         Horários reservados neste dispositivo
@@ -280,6 +298,7 @@ function cancelarAgendamento() {
 
                 <CalendarCheck
                     size={30}
+                    color="#D3AF37"
                 />
 
             </div>
@@ -306,15 +325,18 @@ function cancelarAgendamento() {
 
                             className="
                                 w-full
-                                bg-white
+                                bg-[#1E1E1E]
                                 border
-                                border-zinc-200
+                                border-[#2A2A2A]
                                 rounded-2xl
                                 p-5
                                 flex
                                 flex-col
                                 gap-4
-                                shadow-sm
+                                shadow-lg
+                                transition-all
+                                duration-200
+                                hover:border-[#D3AF37]
                             "
 
                         >
@@ -342,14 +364,16 @@ function cancelarAgendamento() {
                                         w-[45px]
                                         aspect-square
                                         rounded-xl
-                                        bg-black
+                                        bg-[#2A2A2A]
                                         flex
                                         items-center
                                         justify-center
+                                        border
+                                        border-[#D3AF37]
                                     ">
 
                                         <CalendarCheck
-                                            color="white"
+                                            color="#D3AF37"
                                             size={22}
                                         />
 
@@ -364,6 +388,7 @@ function cancelarAgendamento() {
                                         <span className="
                                             font-bold
                                             text-lg
+                                            text-[#FFFFFF]
                                         ">
 
                                             {formatarData(
@@ -375,7 +400,7 @@ function cancelarAgendamento() {
 
                                         <span className="
                                             text-sm
-                                            text-zinc-500
+                                            text-[#A0A0A0]
                                             flex
                                             items-center
                                             gap-1
@@ -383,6 +408,7 @@ function cancelarAgendamento() {
 
                                             <Clock
                                                 size={14}
+                                                color="#757575"
                                             />
 
                                             {agendamento.hora}
@@ -395,13 +421,15 @@ function cancelarAgendamento() {
 
 
                                 <span className="
-                                    bg-green-100
-                                    text-green-700
+                                    bg-[#2A2A2A]
+                                    text-[#D3AF37]
                                     text-xs
                                     font-bold
                                     px-3
                                     py-1
                                     rounded-full
+                                    border
+                                    border-[#D3AF37]
                                 ">
 
                                     AGENDADO
@@ -418,7 +446,7 @@ function cancelarAgendamento() {
                             <div className="
                                 w-full
                                 h-px
-                                bg-zinc-200
+                                bg-[#2A2A2A]
                             " />
 
 
@@ -438,10 +466,12 @@ function cancelarAgendamento() {
                                     items-center
                                     gap-2
                                     text-sm
+                                    text-[#E0E0E0]
                                 ">
 
                                     <UserRound
                                         size={17}
+                                        color="#A0A0A0"
                                     />
 
                                     <span>
@@ -456,10 +486,12 @@ function cancelarAgendamento() {
                                     items-center
                                     gap-2
                                     text-sm
+                                    text-[#E0E0E0]
                                 ">
 
                                     <Phone
                                         size={17}
+                                        color="#A0A0A0"
                                     />
 
                                     <span>
@@ -479,7 +511,7 @@ function cancelarAgendamento() {
                                 flex
                                 items-center
                                 justify-between
-                                bg-zinc-100
+                                bg-[#2A2A2A]
                                 rounded-xl
                                 p-3
                             ">
@@ -490,10 +522,12 @@ function cancelarAgendamento() {
                                     items-center
                                     gap-2
                                     text-sm
+                                    text-[#A0A0A0]
                                 ">
 
                                     <Scissors
                                         size={17}
+                                        color="#757575"
                                     />
 
                                     <span>
@@ -503,41 +537,43 @@ function cancelarAgendamento() {
                                 </div>
 
 
-                                <strong>
+                                <strong className="text-[#FFFFFF]">
 
                                     {agendamento.duracao ?? 0} min
 
                                 </strong>
 
                             </div>
-<button
 
-    type="button"
+                            <button
 
-    onClick={() =>
-        abrirCancelar(
-            agendamento
-        )
-    }
+                                type="button"
 
-    className="
-        w-full
-        rounded-xl
-        border
-        border-red-500
-        text-red-500
-        py-3
-        font-semibold
-        hover:bg-red-500
-        hover:text-white
-        transition-all
-    "
+                                onClick={() =>
+                                    abrirCancelar(
+                                        agendamento
+                                    )
+                                }
 
->
+                                className="
+                                    w-full
+                                    rounded-xl
+                                    border-2
+                                    border-[#D32F2F]
+                                    text-[#FF4D4D]
+                                    py-3
+                                    font-semibold
+                                    hover:bg-[#D32F2F]
+                                    hover:text-[#FFFFFF]
+                                    transition-all
+                                    duration-200
+                                "
 
-    Cancelar agendamento
+                            >
 
-</button>
+                                Cancelar agendamento
+
+                            </button>
 
                         </div>
 
@@ -561,8 +597,8 @@ function cancelarAgendamento() {
 
                 className="
                     w-full
-                    bg-black
-                    text-white
+                    bg-[#D3AF37]
+                    text-[#121212]
                     p-4
                     rounded-xl
                     flex
@@ -570,6 +606,10 @@ function cancelarAgendamento() {
                     justify-center
                     gap-2
                     font-bold
+                    hover:bg-[#C4A032]
+                    transition-all
+                    duration-200
+                    hover:scale-[1.02]
                 "
 
             >
@@ -581,115 +621,144 @@ function cancelarAgendamento() {
                 Voltar para o calendário
 
             </button>
-{
-    modalCancelar &&
 
-    <div className="
-        fixed
-        inset-0
-        bg-black/60
-        flex
-        items-center
-        justify-center
-        z-50
-    ">
+            {
+                modalCancelar &&
 
-        <div className="
-            bg-white
-            rounded-2xl
-            p-6
-            w-[90%]
-            max-w-[380px]
-            flex
-            flex-col
-            gap-6
-        ">
-
-            <div className="text-center">
-
-                <h2 className="
-                    text-xl
-                    font-bold
+                <div className="
+                    fixed
+                    inset-0
+                    bg-[#121212]/90
+                    flex
+                    items-center
+                    justify-center
+                    z-50
+                    p-4
                 ">
 
-                    Cancelar agendamento?
-
-                </h2>
-
-                <p className="
-                    text-sm
-                    text-zinc-500
-                    mt-2
-                ">
-
-                    Esta ação não poderá ser desfeita.
-
-                </p>
-
-            </div>
-
-
-            <div className="
-                flex
-                gap-3
-            ">
-
-                <button
-
-                    onClick={() => {
-
-                        setModalCancelar(
-                            false
-                        )
-
-                        setAgendamentoSelecionado(
-                            null
-                        )
-
-                    }}
-
-                    className="
-                        flex-1
+                    <div className="
+                        bg-[#1E1E1E]
+                        rounded-2xl
+                        p-6
+                        w-[90%]
+                        max-w-[380px]
+                        flex
+                        flex-col
+                        gap-6
                         border
-                        rounded-xl
-                        py-3
-                        font-semibold
-                    "
+                        border-[#2A2A2A]
+                    ">
 
-                >
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => {
+                                    setModalCancelar(false)
+                                    setAgendamentoSelecionado(null)
+                                }}
+                                className="
+                                    bg-[#2A2A2A]
+                                    rounded-full
+                                    p-2
+                                    hover:bg-[#333333]
+                                    transition-colors
+                                "
+                            >
+                                <X size={20} color="#757575" />
+                            </button>
+                        </div>
 
-                    Voltar
+                        <div className="text-center">
 
-                </button>
+                            <h2 className="
+                                text-xl
+                                font-bold
+                                text-[#FFFFFF]
+                            ">
+
+                                Cancelar agendamento?
+
+                            </h2>
+
+                            <p className="
+                                text-sm
+                                text-[#A0A0A0]
+                                mt-2
+                            ">
+
+                                Esta ação não poderá ser desfeita.
+
+                            </p>
+
+                        </div>
 
 
-                <button
+                        <div className="
+                            flex
+                            gap-3
+                        ">
 
-                    onClick={
-                        cancelarAgendamento
-                    }
+                            <button
 
-                    className="
-                        flex-1
-                        rounded-xl
-                        bg-red-600
-                        text-white
-                        py-3
-                        font-semibold
-                    "
+                                onClick={() => {
 
-                >
+                                    setModalCancelar(
+                                        false
+                                    )
 
-                    Cancelar
+                                    setAgendamentoSelecionado(
+                                        null
+                                    )
 
-                </button>
+                                }}
 
-            </div>
+                                className="
+                                    flex-1
+                                    border-2
+                                    border-[#333333]
+                                    rounded-xl
+                                    py-3
+                                    font-semibold
+                                    text-[#E0E0E0]
+                                    hover:bg-[#2A2A2A]
+                                    transition-colors
+                                "
 
-        </div>
+                            >
 
-    </div>
-}
+                                Voltar
+
+                            </button>
+
+
+                            <button
+
+                                onClick={
+                                    cancelarAgendamento
+                                }
+
+                                className="
+                                    flex-1
+                                    rounded-xl
+                                    bg-[#D32F2F]
+                                    text-[#FFFFFF]
+                                    py-3
+                                    font-semibold
+                                    hover:bg-[#B71C1C]
+                                    transition-colors
+                                "
+
+                            >
+
+                                Cancelar
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
 
         </div>
 

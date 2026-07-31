@@ -413,7 +413,7 @@ setInterfaceView(
 
 return (
 
-<div className="w-full max-w-[700px] mx-auto">
+<div className="w-full max-w-[700px] mx-auto bg-[#121212] p-4 rounded-xl">
 
 
   {/* =====================================================
@@ -423,10 +423,13 @@ return (
   <div className="
     w-full
     h-[80px]
-    bg-white
+    bg-[#121212]
     flex
     items-center
     justify-around
+    border-b
+    border-[#2A2A2A]
+    mb-4
   ">
 
 
@@ -449,39 +452,33 @@ return (
       }
 
       className={`
-
         flex
-
         w-[50px]
-
         h-[50px]
-
         rounded-full
-
         items-center
-
         justify-center
+        transition-all
+        duration-200
 
         ${
-
           anoVisualizado ===
             anoAtual &&
 
           mesVisualizado ===
             mesAtual
 
-            ? 'bg-black/30 cursor-not-allowed'
+            ? 'bg-[#333333] cursor-not-allowed'
 
-            : 'bg-black'
-
+            : 'bg-[#D3AF37] hover:bg-[#C4A032] hover:scale-105'
         }
-
       `}
 
     >
 
       <ArrowBigLeft
-        color="white"
+        color={anoVisualizado === anoAtual && mesVisualizado === mesAtual ? '#757575' : '#121212'}
+        size={24}
       />
 
     </button>
@@ -491,8 +488,8 @@ return (
 
     <h1 className="
       text-[30px]
-      text-black
-      font-semibold
+      text-[#FFFFFF]
+      font-bold
     ">
 
       {months[
@@ -518,16 +515,21 @@ return (
         flex
         w-[50px]
         h-[50px]
-        bg-black
+        bg-[#D3AF37]
         rounded-full
         items-center
         justify-center
+        hover:bg-[#C4A032]
+        hover:scale-105
+        transition-all
+        duration-200
       "
 
     >
 
       <ArrowBigRight
-        color="white"
+        color="#121212"
+        size={24}
       />
 
     </button>
@@ -567,10 +569,10 @@ return (
 
             className="
               text-xs
-              text-black
+              text-[#A0A0A0]
               font-semibold
               text-center
-              pb-2
+              pb-3
             "
 
           >
@@ -641,6 +643,8 @@ return (
 
                 flex
 
+                flex-col
+
                 justify-center
 
                 items-center
@@ -651,25 +655,27 @@ return (
 
                 transition-all
 
-                flex-col
+                duration-200
 
-                gap-[15px]
+                gap-1
+
+                border-2
 
                 ${
 
                   item.hoje
 
-                    ? 'bg-[#D3AF37] text-black'
+                    ? 'bg-[#1E1E1E] border-[#D3AF37] text-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
                     : item.passado
 
-                      ? 'bg-black/60 text-zinc-400 cursor-not-allowed'
+                      ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
 
                       : item.atual
 
-                        ? 'bg-black text-white cursor-pointer hover:bg-[#D3AF37] hover:text-black'
+                        ? 'bg-[#1E1E1E] border-[#2A2A2A] text-[#E0E0E0] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
 
-                        : 'bg-black/10 text-zinc-500 cursor-not-allowed'
+                        : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#757575] cursor-not-allowed'
 
                 }
 
@@ -680,27 +686,31 @@ return (
               {item.dia}
 
 
-              <span
+              <div
 
                 className={`
 
-                  w-[10px]
+                  w-[8px]
 
-                  h-[10px]
+                  h-[8px]
 
                   rounded-full
+
+                  transition-all
+
+                  duration-200
 
                   ${
 
                     item.hoje
 
-                      ? 'bg-white'
+                      ? 'bg-[#D3AF37]'
 
-                      : item.atual
+                      : item.atual && !item.passado
 
-                        ? 'bg-white'
+                        ? 'bg-[#FFFFFF]'
 
-                        : 'bg-black/20'
+                        : 'bg-[#333333]'
 
                   }
 

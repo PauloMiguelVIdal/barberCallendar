@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -399,25 +398,6 @@ export default function Formulario({
   // CALCULAR BLOCOS NECESSÁRIOS
   // =======================================================
 
-  /*
-    Cada bloco possui 45 minutos.
-
-    Existe uma tolerância de 20 minutos.
-
-    Exemplos:
-
-    25 min  -> 1 bloco
-    45 min  -> 1 bloco
-    50 min  -> 1 bloco
-    65 min  -> 1 bloco
-
-    66 min  -> 2 blocos
-    90 min  -> 2 blocos
-    110 min -> 2 blocos
-
-    111 min -> 3 blocos
-  */
-
   const blocosNecessarios =
 
     tempoTotal > 0
@@ -619,24 +599,6 @@ export default function Formulario({
           horarioParaMinutos(
             agendamento.hora
           )
-
-        /*
-          IMPORTANTE:
-
-          O agendamento existente também
-          respeita os 20 minutos de tolerância.
-
-          Exemplo:
-
-          atendimento de 50 min
-
-          50 - 20 = 30
-
-          ceil(30 / 45) = 1 bloco
-
-          Portanto ele não bloqueia o
-          próximo horário.
-        */
 
         const duracaoAgendamento =
 
@@ -888,14 +850,6 @@ export default function Formulario({
 
         )
 
-      /*
-        Aqui usamos a duração REAL do
-        atendimento novo.
-
-        A tolerância não aumenta o
-        tempo real do serviço.
-      */
-
       const fimNovoCliente =
 
         inicioNovoCliente +
@@ -1030,17 +984,6 @@ export default function Formulario({
 
     useMemo<Sugestao[]>(() => {
 
-      /*
-        Não existem sugestões quando:
-
-        1. Nenhum serviço foi selecionado.
-        2. O horário atual já comporta
-           todos os serviços.
-
-        Assim as sugestões só aparecem
-        quando REALMENTE são necessárias.
-      */
-
       if (
 
         !possuiServicosSelecionados ||
@@ -1060,10 +1003,6 @@ export default function Formulario({
       }
 
       const resultado: Sugestao[] = []
-
-      // ===================================================
-      // SUGESTÃO 1
-      // ===================================================
 
       for (
 
@@ -1113,10 +1052,6 @@ export default function Formulario({
         }
 
       }
-
-      // ===================================================
-      // SUGESTÃO 2
-      // ===================================================
 
       for (
 
@@ -1168,10 +1103,6 @@ export default function Formulario({
         }
 
       }
-
-      // ===================================================
-      // SUGESTÃO 3
-      // ===================================================
 
       const proximaSemana =
 
@@ -1484,7 +1415,7 @@ export default function Formulario({
     <div className="
       w-full
       h-screen
-      bg-black/80
+      bg-[#121212]/90
       fixed
       top-0
       left-0
@@ -1500,27 +1431,44 @@ export default function Formulario({
         max-w-[500px]
         max-h-[90vh]
         overflow-y-auto
-        bg-white
+        bg-[#1E1E1E]
         flex
         flex-col
-        p-4
+        p-6
         gap-4
         rounded-xl
+        border
+        border-[#2A2A2A]
       ">
+
+        {/* =================================================
+            BOTÃO FECHAR - ESTILO DOURADO E RESPONSIVO
+        ================================================= */}
 
         <button
 
           type="button"
 
           className="
-            bg-black
             flex
             items-center
             justify-center
-            rounded-xl
-            w-[35px]
-            h-[35px]
+            rounded-full
+            w-10
+            h-10
+            sm:w-12
+            sm:h-12
             self-end
+            transition-all
+            duration-300
+            ease-in-out
+            border-2
+            bg-[#1E1E1E]
+            border-[#D3AF37]
+            hover:bg-[#D3AF37]
+            hover:scale-110
+            active:scale-95
+            group
           "
 
           onClick={
@@ -1529,9 +1477,21 @@ export default function Formulario({
 
         >
 
-          <X color="white" />
+          <X 
+            size={24}
+            className="
+              text-[#D3AF37]
+              group-hover:text-[#121212]
+              transition-colors
+              duration-300
+            "
+          />
 
         </button>
+
+        {/* =================================================
+            CAMPOS NOME E TELEFONE
+        ================================================= */}
 
         <div className="
           w-full
@@ -1549,12 +1509,18 @@ export default function Formulario({
             }
 
             className="
-              text-black
-              bg-black/10
-              p-2
+              text-[#E0E0E0]
+              bg-[#2A2A2A]
+              p-3
               w-full
-              h-[40px]
-              rounded-sm
+              h-[45px]
+              rounded-lg
+              placeholder:text-[#757575]
+              focus:outline-none
+              focus:ring-2
+              focus:ring-[#D3AF37]
+              border
+              border-[#333333]
             "
 
             onChange={e =>
@@ -1586,24 +1552,21 @@ export default function Formulario({
             }
 
             className={`
-
-              text-black
-
-              bg-black/10
-
-              p-2
-
+              text-[#E0E0E0]
+              bg-[#2A2A2A]
+              p-3
               w-full
-
-              h-[40px]
-
-              rounded-sm
-
+              h-[45px]
+              rounded-lg
+              placeholder:text-[#757575]
+              focus:outline-none
+              focus:ring-2
+              focus:ring-[#D3AF37]
+              border
               ${erroTelefone
-                ? 'border-2 border-red-500'
-                : ''
+                ? 'border-[#D32F2F] ring-2 ring-[#D32F2F]'
+                : 'border-[#333333]'
               }
-
             `}
 
             onChange={e =>
@@ -1621,7 +1584,7 @@ export default function Formulario({
           {erroTelefone && (
 
             <p className="
-              text-red-500
+              text-[#FF4D4D]
               text-xs
             ">
 
@@ -1635,14 +1598,20 @@ export default function Formulario({
 
         </div>
 
+        {/* =================================================
+            LISTA DE SERVIÇOS
+        ================================================= */}
+
         <div className="
-          bg-black
+          bg-[#121212]
           w-full
           rounded-xl
           p-2
           flex
           flex-col
-          gap-2
+          gap-1
+          border
+          border-[#2A2A2A]
         ">
 
           {services.map(
@@ -1678,27 +1647,36 @@ export default function Formulario({
 
         </div>
 
+        {/* =================================================
+            RESUMO DO AGENDAMENTO
+        ================================================= */}
+
         <div className="
           w-full
-          bg-zinc-100
+          bg-[#121212]
           rounded-xl
           p-4
           flex
           flex-col
-          gap-2
-          text-black
+          gap-3
+          text-[#E0E0E0]
+          border
+          border-[#2A2A2A]
         ">
 
           <div className="
             flex
             justify-between
+            border-b
+            border-[#2A2A2A]
+            pb-2
           ">
 
-            <span>
+            <span className="text-[#A0A0A0]">
               Data:
             </span>
 
-            <strong>
+            <strong className="text-[#FFFFFF]">
               {dataSelecionada}
             </strong>
 
@@ -1707,13 +1685,16 @@ export default function Formulario({
           <div className="
             flex
             justify-between
+            border-b
+            border-[#2A2A2A]
+            pb-2
           ">
 
-            <span>
+            <span className="text-[#A0A0A0]">
               Horário:
             </span>
 
-            <strong>
+            <strong className="text-[#FFFFFF]">
               {horarioSelecionado}
             </strong>
 
@@ -1722,13 +1703,16 @@ export default function Formulario({
           <div className="
             flex
             justify-between
+            border-b
+            border-[#2A2A2A]
+            pb-2
           ">
 
-            <span>
+            <span className="text-[#A0A0A0]">
               Tempo estimado:
             </span>
 
-            <strong>
+            <strong className="text-[#FFFFFF]">
 
               {
                 formatarTempo(
@@ -1743,13 +1727,16 @@ export default function Formulario({
           <div className="
             flex
             justify-between
+            border-b
+            border-[#2A2A2A]
+            pb-2
           ">
 
-            <span>
+            <span className="text-[#A0A0A0]">
               Blocos necessários:
             </span>
 
-            <strong>
+            <strong className="text-[#FFFFFF]">
 
               {
                 blocosNecessarios
@@ -1764,11 +1751,11 @@ export default function Formulario({
             justify-between
           ">
 
-            <span>
+            <span className="text-[#A0A0A0]">
               Total:
             </span>
 
-            <strong>
+            <strong className="text-[#D3AF37] text-lg">
 
               R$ {
                 somaFatu
@@ -1780,13 +1767,17 @@ export default function Formulario({
 
         </div>
 
+        {/* =================================================
+            AVISO DE SOBREPOSIÇÃO
+        ================================================= */}
+
         {mostrarAvisoSobreposicao && (
 
           <div className="
             w-full
-            bg-yellow-100
+            bg-[#2A2A2A]
             border
-            border-yellow-500
+            border-[#D3AF37]
             rounded-xl
             p-4
             flex
@@ -1797,15 +1788,17 @@ export default function Formulario({
             <AlertTriangle
 
               className="
-                text-yellow-600
+                text-[#D3AF37]
                 shrink-0
+                mt-0.5
               "
+              size={20}
 
             />
 
             <p className="
               text-sm
-              text-black
+              text-[#E0E0E0]
             ">
 
               Por conta do cliente antes de você,
@@ -1814,7 +1807,7 @@ export default function Formulario({
 
               A estimativa é de aproximadamente
 
-              <strong>
+              <strong className="text-[#D3AF37]">
 
                 {' '}
 
@@ -1837,14 +1830,18 @@ export default function Formulario({
 
         )}
 
+        {/* =================================================
+            SUGESTÕES
+        ================================================= */}
+
         {mostrarMensagemIndisponivel &&
           sugestoes.length > 0 && (
 
             <div className="
               w-full
-              bg-blue-50
+              bg-[#2A2A2A]
               border
-              border-blue-300
+              border-[#D3AF37]
               rounded-xl
               p-4
               flex
@@ -1853,7 +1850,7 @@ export default function Formulario({
             ">
 
               <h3 className="
-                text-black
+                text-[#D3AF37]
                 font-bold
               ">
 
@@ -1864,7 +1861,7 @@ export default function Formulario({
 
               <p className="
                 text-sm
-                text-black
+                text-[#E0E0E0]
               ">
 
                 Como os serviços selecionados precisam
@@ -1921,7 +1918,7 @@ export default function Formulario({
 
                         gap-1
 
-                        border
+                        border-2
 
                         text-left
 
@@ -1931,9 +1928,9 @@ export default function Formulario({
 
                         ${selecionada
 
-                          ? 'border-blue-600 bg-blue-100 ring-2 ring-blue-400'
+                          ? 'border-[#D3AF37] bg-[#1E1E1E] ring-2 ring-[#D3AF37]/50'
 
-                          : 'border-zinc-200 bg-white hover:border-blue-500 hover:bg-blue-50'
+                          : 'border-[#333333] bg-[#121212] hover:border-[#757575]'
                         }
 
                       `}
@@ -1941,7 +1938,7 @@ export default function Formulario({
                     >
 
                       <strong className="
-                        text-black
+                        text-[#D3AF37]
                       ">
 
                         Opção {
@@ -1956,7 +1953,7 @@ export default function Formulario({
                       </strong>
 
                       <span className="
-                        text-black
+                        text-[#FFFFFF]
                         font-semibold
                       ">
 
@@ -1968,7 +1965,7 @@ export default function Formulario({
 
                       <span className="
                         text-xs
-                        text-zinc-600
+                        text-[#A0A0A0]
                       ">
 
                         {
@@ -1979,7 +1976,7 @@ export default function Formulario({
 
                       <span className="
                         text-xs
-                        text-zinc-500
+                        text-[#757575]
                       ">
 
                         Data: {
@@ -1998,7 +1995,7 @@ export default function Formulario({
 
               <p className="
                 text-xs
-                text-zinc-500
+                text-[#757575]
               ">
 
                 Escolha uma das sugestões acima
@@ -2021,7 +2018,9 @@ export default function Formulario({
           <div className="
             w-full
             rounded-xl
-            bg-black
+            bg-[#D3AF37]
+            hover:bg-[#C4A032]
+            transition-colors
           ">
 
             <button
@@ -2033,23 +2032,27 @@ export default function Formulario({
                 p-4
                 flex
                 items-center
-                justify-around
+                justify-center
+                gap-3
                 rounded-xl
-                text-white
+                text-[#121212]
+                font-bold
               "
 
-onClick={() => {
-  confirmarAgendamento();
-  setInterfaceView('appointments');
-}}
+              onClick={() => {
+                confirmarAgendamento();
+                setInterfaceView('appointments');
+              }}
 
             >
 
-              <CalendarCheck2 />
+              <CalendarCheck2 size={20} />
 
               <span className="
                 font-bold
                 text-center
+                text-sm
+                tracking-wider
               ">
 
                 CONFIRMAR AGENDAMENTO
@@ -2066,8 +2069,8 @@ onClick={() => {
             w-full
             rounded-xl
             border-2
-            border-red-300
-            bg-red-50
+            border-[#D32F2F]
+            bg-[#2A2A2A]
             p-5
             flex
             flex-col
@@ -2076,7 +2079,7 @@ onClick={() => {
           ">
 
             <span className="
-              text-red-700
+              text-[#FF4D4D]
               font-bold
               text-center
             ">
@@ -2088,7 +2091,7 @@ onClick={() => {
 
             <span className="
               text-sm
-              text-red-600
+              text-[#A0A0A0]
               text-center
             ">
 
@@ -2108,4 +2111,3 @@ onClick={() => {
   )
 
 }
-
