@@ -44,13 +44,13 @@ function HomeContent() {
 
   return (
 
-    <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col bg-[#121212]">
+    <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col bg-[#121212] relative">
 
       {/* =================================================
-          HEADER
+          HEADER - FIXO NO TOPO
       ================================================= */}
 
-      <header>
+      <header className="flex-shrink-0">
 
         <div className="h-[100px] border-b border-[#2A2A2A] bg-[#121212] flex items-center justify-center">
 
@@ -78,10 +78,10 @@ function HomeContent() {
 
 
       {/* =================================================
-          CONTEÚDO
+          CONTEÚDO - ROLÁVEL
       ================================================= */}
 
-      <main className="flex-1 overflow-y-auto p-0 w-full bg-[#121212]">
+      <main className="flex-1 overflow-y-auto p-0 w-full bg-[#121212] pb-[80px]">
 
         {interfaceView === 'day' && (
           <Callendar />
@@ -102,10 +102,22 @@ function HomeContent() {
 
 
       {/* =================================================
-          FOOTER
+          FOOTER - FIXO NA PARTE INFERIOR
       ================================================= */}
 
-      <footer className="border-t border-[#2A2A2A] bg-[#121212] px-2 py-3 flex-shrink-0">
+      <footer className="
+        border-t 
+        border-[#2A2A2A] 
+        bg-[#121212] 
+        px-2 
+        py-3 
+        flex-shrink-0 
+        absolute 
+        bottom-0 
+        left-0 
+        right-0 
+        z-10
+      ">
 
         <div className="flex w-full justify-around items-center">
 
