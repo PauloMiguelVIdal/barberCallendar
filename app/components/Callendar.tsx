@@ -459,6 +459,7 @@ export default function Callendar() {
       h-full
       bg-[#121212]
       text-[#E0E0E0]
+      p-4
     ">
 
       {/* =====================================================
@@ -482,14 +483,7 @@ export default function Callendar() {
       ====================================================== */}
 
       <div className="
-        w-full
-        h-[80px]
-       
-        flex
-        items-center
-        justify-around
-        
-        
+w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border-b   border-[#2A2A2A]   mb-4   
       ">
 
 
@@ -601,6 +595,7 @@ export default function Callendar() {
         mt-4
         text-[#A0A0A0]
         text-sm
+         
       ">
 
       </div>
