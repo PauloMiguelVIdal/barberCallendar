@@ -44,8 +44,7 @@ function HomeContent() {
 
   return (
 
-    <div className="h-screen w-full max-w-[600px] mx-auto flex flex-col bg-[#121212] relative">
-
+ <div className="h-dvh w-full max-w-[600px] mx-auto flex flex-col bg-[#121212] relative">
       {/* =================================================
           HEADER - FIXO NO TOPO
       ================================================= */}
@@ -117,6 +116,7 @@ function HomeContent() {
         left-0 
         right-0 
         z-10
+         pb-[calc(0.75rem+env(safe-area-inset-bottom))]
       ">
 
         <div className="flex w-full justify-around items-center">
