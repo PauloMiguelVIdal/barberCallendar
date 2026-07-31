@@ -4,7 +4,8 @@ import Callendar from "./components/Callendar"
 import CallendarWeek from "./components/CallendarWeek"
 import CallendarMonth from "./components/CallendarMonth"
 import Appointments from "./components/appointments"
-
+import logo from '../public/logo.png'
+import Image from 'next/image'
 import {
   CentralDadosProvider,
   useCentralDados
@@ -51,11 +52,25 @@ function HomeContent() {
 
       <header>
 
-        <div className="h-[100px] border-b border-[#2A2A2A] bg-[#121212]">
+        <div className="h-[100px] border-b border-[#2A2A2A] bg-[#121212] flex items-center justify-center">
 
-          <h1 className="text-center text-[40px] text-[#D3AF37] p-4 font-bold tracking-wider">
-            BRAVE BOSS
-          </h1>
+          <div className="flex items-center justify-around w-full max-w-[400px]">
+            <span className="text-[40px] text-[#D3AF37] font-bold tracking-wider">
+              BRAVE
+            </span>
+            
+            <Image 
+              src={logo}
+              alt="Logo"
+              height={40}
+              width={40}
+              className="h-[40px] w-auto object-contain"
+            />
+            
+            <span className="text-[40px] text-[#D3AF37] font-bold tracking-wider">
+              BOSS
+            </span>
+          </div>
 
         </div>
 
