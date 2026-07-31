@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -86,6 +85,21 @@ export default function Callendar() {
 
   const anoVisualizado =
     dataVisualizada.getFullYear()
+
+
+  // =========================================================
+  // DIAS DA SEMANA
+  // =========================================================
+
+  const diasSemana = [
+    'Dom',
+    'Seg',
+    'Ter',
+    'Qua',
+    'Qui',
+    'Sex',
+    'Sáb'
+  ]
 
 
   // =========================================================
@@ -443,8 +457,25 @@ export default function Callendar() {
     <div className="
       w-full
       h-full
+      bg-[#121212]
+      text-[#E0E0E0]
     ">
 
+      {/* =====================================================
+          MÊS
+      ====================================================== */}
+
+      {/* <div className="
+        text-center
+        text-[#E0E0E0]
+        font-bold
+        text-xl
+        mt-2
+      ">
+
+        {meses[mesVisualizado]}
+
+      </div> */}
 
       {/* =====================================================
           CABEÇALHO
@@ -453,10 +484,12 @@ export default function Callendar() {
       <div className="
         w-full
         h-[80px]
-        bg-white
+        bg-[#121212]
         flex
         items-center
         justify-around
+        border-b
+        border-[#2A2A2A]
       ">
 
 
@@ -489,9 +522,9 @@ export default function Callendar() {
               dataVisualizada.getTime() ===
               hoje.getTime()
 
-                ? 'bg-black/30 cursor-not-allowed'
+                ? 'bg-[#333333] cursor-not-allowed'
 
-                : 'bg-black'
+                : 'bg-[#D3AF37] hover:bg-[#C4A032]'
             }
           `}
 
@@ -510,8 +543,9 @@ export default function Callendar() {
 
         <h1 className="
           text-[25px]
-          text-black
+          text-[#FFFFFF]
           text-center
+          font-bold
         ">
 
           {diaVisualizado}/
@@ -535,10 +569,11 @@ export default function Callendar() {
             flex
             w-[50px]
             h-[50px]
-            bg-black
+            bg-[#D3AF37]
             rounded-full
             items-center
             justify-center
+            hover:bg-[#C4A032]
           "
 
         >
@@ -553,21 +588,27 @@ export default function Callendar() {
       </div>
 
 
+
+
       {/* =====================================================
-          MÊS
+          DIAS DA SEMANA
       ====================================================== */}
 
       <div className="
-        text-center
-        text-black
-        font-bold
-        text-xl
-        mt-2
+        flex
+        justify-around
+        px-4
+        mt-4
+        text-[#A0A0A0]
+        text-sm
       ">
 
-        {meses[mesVisualizado]}
-
       </div>
+
+
+      {/* =====================================================
+          OPÇÃO (LEGENDA)
+      ====================================================== */}
 
 
       {/* =====================================================
@@ -578,7 +619,10 @@ export default function Callendar() {
         flex
         items-center
         flex-col
-        mt-4
+        mt-0
+        gap-2
+        px-4
+       bg-gradient-to-b from-[#121212] to-[#1E1E1E]
       ">
 
 
@@ -612,53 +656,75 @@ export default function Callendar() {
 
             return (
 
-              <Horario
+              <div
+                key={horario.hora}
+                className="w-full"
+              >
 
-                key={
-                  horario.hora
-                }
+                <button
 
-                horario={
-                  horarioComEstado
-                }
+                  onClick={() => {
 
-                onSelecionar={(
-                  horarioClicado
-                ) => {
+                    // =================================================
+                    // IMPEDIR HORÁRIO OCUPADO
+                    // =================================================
 
-                  // =================================================
-                  // IMPEDIR HORÁRIO OCUPADO
-                  // =================================================
+                    if (ocupado) {
 
-                  if (
-                    horarioClicado.ocupado
-                  ) {
+                      return
 
-                    return
-
-                  }
+                    }
 
 
-                  // =================================================
-                  // SELECIONAR HORÁRIO
-                  // =================================================
+                    // =================================================
+                    // SELECIONAR HORÁRIO
+                    // =================================================
 
-                  selecionarHorario(
-                    horarioClicado.hora
-                  )
+                    selecionarHorario(
+                      horario.hora
+                    )
 
 
-                  // =================================================
-                  // ABRIR FORMULÁRIO
-                  // =================================================
+                    // =================================================
+                    // ABRIR FORMULÁRIO
+                    // =================================================
 
-                  setModalAgendamento(
-                    true
-                  )
+                    setModalAgendamento(
+                      true
+                    )
 
-                }}
+                  }}
 
-              />
+                  className={`
+                    w-full
+                    py-3
+                    px-4
+                    rounded-lg
+                    text-left
+                    transition-colors
+                    border-2
+                    ${
+                      ocupado
+                        ? 'bg-[#333333] text-[#757575] border-[#333333] cursor-not-allowed'
+                        : 'bg-[#000000] text-[#D3AF37] border-[#D3AF37] hover:bg-[#2A2A2A]'
+                    }
+                  `}
+
+                >
+
+                  <div className="flex justify-between items-center">
+                    <span className={ocupado ? '' : 'text-[#D3AF37]'}>{horario.hora}</span>
+                    <span className={`
+                      text-sm
+                      ${ocupado ? 'text-[#757575]' : 'text-[#FFFFFF]'}
+                    `}>
+                      {ocupado ? 'ocupado' : 'livre'}
+                    </span>
+                  </div>
+
+                </button>
+
+              </div>
 
             )
 
@@ -722,4 +788,3 @@ export default function Callendar() {
   )
 
 }
-

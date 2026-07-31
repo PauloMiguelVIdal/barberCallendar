@@ -66,7 +66,7 @@ function HomeContent() {
           CONTEÚDO
       ================================================= */}
 
-      <main className="flex-1 overflow-y-auto p-8 w-full">
+      <main className="flex-1 overflow-y-auto p-0 w-full">
 
         {interfaceView === 'day' && (
           <Callendar />
