@@ -1,5 +1,7 @@
 'use client'
+import { useState } from 'react'
 
+import { AgendamentoType } from '../types/Agendamento'
 import {
     CalendarCheck,
     Clock,
@@ -20,10 +22,24 @@ export default function Appointments() {
     // CONTEXT
     // =========================================================
 
-    const {
-        agendamentosCliente,
-        setInterfaceView
-    } = useCentralDados()
+
+const {
+    agendamentosCliente,
+    removerAgendamento,
+    removerAgendamentoCliente,
+    setInterfaceView
+} = useCentralDados()
+
+const [
+    modalCancelar,
+    setModalCancelar
+] = useState(false)
+
+const [
+    agendamentoSelecionado,
+    setAgendamentoSelecionado
+] = useState<AgendamentoType | null>(null)
+
 
 
     // =========================================================
@@ -45,7 +61,45 @@ export default function Appointments() {
 
     }
 
+function abrirCancelar(
+    agendamento: AgendamentoType
+) {
 
+    setAgendamentoSelecionado(
+        agendamento
+    )
+
+    setModalCancelar(
+        true
+    )
+
+}
+
+function cancelarAgendamento() {
+
+    if (!agendamentoSelecionado) {
+
+        return
+
+    }
+
+    removerAgendamento(
+        agendamentoSelecionado.id
+    )
+
+    removerAgendamentoCliente(
+        agendamentoSelecionado.id
+    )
+
+    setModalCancelar(
+        false
+    )
+
+    setAgendamentoSelecionado(
+        null
+    )
+
+}
     // =========================================================
     // ORDENAR AGENDAMENTOS
     // =========================================================
@@ -456,7 +510,34 @@ export default function Appointments() {
                                 </strong>
 
                             </div>
+<button
 
+    type="button"
+
+    onClick={() =>
+        abrirCancelar(
+            agendamento
+        )
+    }
+
+    className="
+        w-full
+        rounded-xl
+        border
+        border-red-500
+        text-red-500
+        py-3
+        font-semibold
+        hover:bg-red-500
+        hover:text-white
+        transition-all
+    "
+
+>
+
+    Cancelar agendamento
+
+</button>
 
                         </div>
 
@@ -500,7 +581,115 @@ export default function Appointments() {
                 Voltar para o calendário
 
             </button>
+{
+    modalCancelar &&
 
+    <div className="
+        fixed
+        inset-0
+        bg-black/60
+        flex
+        items-center
+        justify-center
+        z-50
+    ">
+
+        <div className="
+            bg-white
+            rounded-2xl
+            p-6
+            w-[90%]
+            max-w-[380px]
+            flex
+            flex-col
+            gap-6
+        ">
+
+            <div className="text-center">
+
+                <h2 className="
+                    text-xl
+                    font-bold
+                ">
+
+                    Cancelar agendamento?
+
+                </h2>
+
+                <p className="
+                    text-sm
+                    text-zinc-500
+                    mt-2
+                ">
+
+                    Esta ação não poderá ser desfeita.
+
+                </p>
+
+            </div>
+
+
+            <div className="
+                flex
+                gap-3
+            ">
+
+                <button
+
+                    onClick={() => {
+
+                        setModalCancelar(
+                            false
+                        )
+
+                        setAgendamentoSelecionado(
+                            null
+                        )
+
+                    }}
+
+                    className="
+                        flex-1
+                        border
+                        rounded-xl
+                        py-3
+                        font-semibold
+                    "
+
+                >
+
+                    Voltar
+
+                </button>
+
+
+                <button
+
+                    onClick={
+                        cancelarAgendamento
+                    }
+
+                    className="
+                        flex-1
+                        rounded-xl
+                        bg-red-600
+                        text-white
+                        py-3
+                        font-semibold
+                    "
+
+                >
+
+                    Cancelar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
 
         </div>
 

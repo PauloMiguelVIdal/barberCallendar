@@ -171,7 +171,7 @@ export default function Formulario({
   const {
 
     selecionarHorario,
-
+    setInterfaceView,
     definirDataAgendamento
 
   } = useCentralDados()
@@ -383,7 +383,7 @@ export default function Formulario({
 
         (
           DURACAO_SERVICOS[
-            service.serviço
+          service.serviço
           ]
 
           ??
@@ -757,7 +757,7 @@ export default function Formulario({
       const horarioAtual =
 
         HORARIOS_DISPONIVEIS[
-          indiceHorario
+        indiceHorario
         ]
 
       if (
@@ -1599,10 +1599,9 @@ export default function Formulario({
 
               rounded-sm
 
-              ${
-                erroTelefone
-                  ? 'border-2 border-red-500'
-                  : ''
+              ${erroTelefone
+                ? 'border-2 border-red-500'
+                : ''
               }
 
             `}
@@ -1930,12 +1929,11 @@ export default function Formulario({
 
                         cursor-pointer
 
-                        ${
-                          selecionada
+                        ${selecionada
 
-                            ? 'border-blue-600 bg-blue-100 ring-2 ring-blue-400'
+                          ? 'border-blue-600 bg-blue-100 ring-2 ring-blue-400'
 
-                            : 'border-zinc-200 bg-white hover:border-blue-500 hover:bg-blue-50'
+                          : 'border-zinc-200 bg-white hover:border-blue-500 hover:bg-blue-50'
                         }
 
                       `}
@@ -2018,7 +2016,7 @@ export default function Formulario({
 
         {!possuiServicosSelecionados ||
 
-        podeAgendar ? (
+          podeAgendar ? (
 
           <div className="
             w-full
@@ -2040,9 +2038,10 @@ export default function Formulario({
                 text-white
               "
 
-              onClick={
-                confirmarAgendamento
-              }
+onClick={() => {
+  confirmarAgendamento();
+  setInterfaceView('appointments');
+}}
 
             >
 
