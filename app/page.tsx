@@ -105,136 +105,128 @@ function HomeContent() {
           FOOTER
       ================================================= */}
 
-      <footer className="border-t border-[#2A2A2A] bg-[#121212] p-4">
+      <footer className="border-t border-[#2A2A2A] bg-[#121212] px-2 py-3 flex-shrink-0">
 
-        <div className="flex w-full justify-between">
+        <div className="flex w-full justify-around items-center">
 
+          {/* DIA */}
+          <button
 
-          {/* =============================================
-              NAVEGAÇÃO
-          ============================================= */}
+            onClick={() =>
+              setInterfaceView('day')
+            }
 
-          <div className="flex w-[60%] justify-between">
+            className={`
+              flex
+              justify-center
+              rounded-xl
+              border-2
+              items-center
+              min-w-[48px]
+              min-h-[48px]
+              w-[48px]
+              h-[48px]
+              transition-all
+              duration-200
+              touch-manipulation
 
+              ${
+                interfaceView === 'day'
 
-            {/* DIA */}
+                  ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-            <button
-
-              onClick={() =>
-                setInterfaceView('day')
+                  : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
               }
+            `}
+          >
 
-              className={`
-                flex
-                justify-center
-                rounded-xl
-                border-2
-                items-center
-                w-[50px]
-                aspect-square
-                transition-all
-                duration-200
+            <Calendar1 
+              color={interfaceView === 'day' ? '#D3AF37' : '#757575'} 
+              size={24}
+              strokeWidth={2}
+            />
 
-                ${
-                  interfaceView === 'day'
+          </button>
 
-                    ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
+          {/* SEMANA */}
+          <button
 
-                    : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
-                }
-              `}
-            >
+            onClick={() =>
+              setInterfaceView('week')
+            }
 
-              <Calendar1 
-                color={interfaceView === 'day' ? '#D3AF37' : '#757575'} 
-                size={24}
-              />
+            className={`
+              flex
+              justify-center
+              rounded-xl
+              border-2
+              items-center
+              min-w-[48px]
+              min-h-[48px]
+              w-[48px]
+              h-[48px]
+              transition-all
+              duration-200
+              touch-manipulation
 
-            </button>
+              ${
+                interfaceView === 'week'
 
+                  ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-            {/* SEMANA */}
-
-            <button
-
-              onClick={() =>
-                setInterfaceView('week')
+                  : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
               }
+            `}
+          >
 
-              className={`
-                flex
-                justify-center
-                rounded-xl
-                border-2
-                items-center
-                w-[50px]
-                aspect-square
-                transition-all
-                duration-200
+            <Calendar 
+              color={interfaceView === 'week' ? '#D3AF37' : '#757575'} 
+              size={24}
+              strokeWidth={2}
+            />
 
-                ${
-                  interfaceView === 'week'
+          </button>
 
-                    ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
+          {/* MÊS */}
+          <button
 
-                    : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
-                }
-              `}
-            >
+            onClick={() =>
+              setInterfaceView('month')
+            }
 
-              <Calendar 
-                color={interfaceView === 'week' ? '#D3AF37' : '#757575'} 
-                size={24}
-              />
+            className={`
+              flex
+              justify-center
+              rounded-xl
+              border-2
+              items-center
+              min-w-[48px]
+              min-h-[48px]
+              w-[48px]
+              h-[48px]
+              transition-all
+              duration-200
+              touch-manipulation
 
-            </button>
+              ${
+                interfaceView === 'month'
 
+                  ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-            {/* MÊS */}
-
-            <button
-
-              onClick={() =>
-                setInterfaceView('month')
+                  : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
               }
+            `}
+          >
 
-              className={`
-                flex
-                justify-center
-                rounded-xl
-                border-2
-                items-center
-                w-[50px]
-                aspect-square
-                transition-all
-                duration-200
+            <CalendarDays 
+              color={interfaceView === 'month' ? '#D3AF37' : '#757575'} 
+              size={24}
+              strokeWidth={2}
+            />
 
-                ${
-                  interfaceView === 'month'
+          </button>
 
-                    ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
-
-                    : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
-                }
-              `}
-            >
-
-              <CalendarDays 
-                color={interfaceView === 'month' ? '#D3AF37' : '#757575'} 
-                size={24}
-              />
-
-            </button>
-
-
-          </div>
-
-
-          {/* =============================================
-              AGENDAMENTOS
-          ============================================= */}
-
+          {/* AGENDAMENTOS */}
           <button
 
             onClick={() =>
@@ -247,10 +239,13 @@ function HomeContent() {
               rounded-xl
               border-2
               items-center
-              w-[50px]
-              aspect-square
+              min-w-[48px]
+              min-h-[48px]
+              w-[48px]
+              h-[48px]
               transition-all
               duration-200
+              touch-manipulation
 
               ${
                 interfaceView === 'appointments'
@@ -260,16 +255,15 @@ function HomeContent() {
                   : 'bg-[#1E1E1E] border-[#333333] hover:border-[#757575]'
               }
             `}
-
           >
 
             <CalendarCheck
               color={interfaceView === 'appointments' ? '#D3AF37' : '#757575'} 
               size={24}
+              strokeWidth={2}
             />
 
           </button>
-
 
         </div>
 
