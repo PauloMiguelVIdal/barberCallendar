@@ -125,24 +125,28 @@ const DURACAO_SERVICOS: Record<string, number> = {
 
   'Navalhado': 35,
 
-  'Corte kids': 45,
-
   'Corte tesoura': 45,
-
+  
+  'Corte kids': 45,
+  
+  
   'Barba': 20,
-
+  
   'Sobrancelha': 5,
-
+  
+  
   'Alisamento': 30,
 
-  'Luzes': 90,
+  'Progressiva': 105,
 
-  'Platinado': 130,
-
+  
   'Pigmentação': 20,
+  
+  'Tintura': 20,
 
-  'Tintura': 20
-
+  'Luzes': 110,
+  
+  'Platinado': 130,
 }
 
 // =========================================================
@@ -236,16 +240,16 @@ export default function Formulario({
       price: 40
     },
 
-    {
-      checkbox: false,
-      serviço: 'Corte kids',
-      price: 40
-    },
-
+    
     {
       checkbox: false,
       serviço: 'Corte tesoura',
       price: 45
+    },
+    {
+      checkbox: false,
+      serviço: 'Corte kids',
+      price: 40
     },
 
     {
@@ -265,18 +269,13 @@ export default function Formulario({
       serviço: 'Alisamento',
       price: 45
     },
-
     {
       checkbox: false,
-      serviço: 'Luzes',
-      price: 100
+      serviço: 'Progressiva',
+      price: 150
     },
 
-    {
-      checkbox: false,
-      serviço: 'Platinado',
-      price: 120
-    },
+
 
     {
       checkbox: false,
@@ -288,7 +287,18 @@ export default function Formulario({
       checkbox: false,
       serviço: 'Tintura',
       price: 20
-    }
+    },
+        {
+      checkbox: false,
+      serviço: 'Luzes',
+      price: 100
+    },
+
+    {
+      checkbox: false,
+      serviço: 'Platinado',
+      price: 120
+    },
 
   ])
 

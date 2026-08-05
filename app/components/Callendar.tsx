@@ -615,6 +615,7 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
         items-center
         flex-col
         mt-0
+        pb-[80px]
         gap-2
         px-4
        bg-gradient-to-b from-[#121212] to-[#1E1E1E]
