@@ -7,7 +7,7 @@ import { horarioType } from '../types/horario'
 import {
     useCentralDados,
     useAgendamentos
-} from './PersistData'
+} from '../context/PersistData'
 
 
 export default function CallendarWeek() {

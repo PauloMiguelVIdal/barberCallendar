@@ -9,7 +9,7 @@ import Image from 'next/image'
 import {
   CentralDadosProvider,
   useCentralDados
-} from "./components/PersistData"
+} from "./context/PersistData"
 
 import {
   Calendar,
@@ -18,8 +18,33 @@ import {
   CalendarCheck
 } from 'lucide-react'
 
+import { useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+
+
+
+
+
 
 export default function Home() {
+    useEffect(() => {
+
+        async function testarConexao() {
+
+            const { data, error } = await supabase
+                .from('servicos')
+                .select('*')
+
+            console.log('Dados:', data)
+            console.log('Erro:', error)
+
+        }
+
+        testarConexao()
+
+    }, [])
+
+
 
   return (
 

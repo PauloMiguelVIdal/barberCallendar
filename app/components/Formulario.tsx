@@ -17,7 +17,7 @@ import { servicesType } from '../types/service'
 
 import {
   useCentralDados
-} from './PersistData'
+} from '../context/PersistData'
 
 // =========================================================
 // TIPOS
