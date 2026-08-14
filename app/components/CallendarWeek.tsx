@@ -1,8 +1,15 @@
 'use client'
 
-import { ArrowBigLeft, ArrowBigRight } from 'lucide-react'
+import { useEffect } from 'react'
 
-import { horarioType } from '../types/horario'
+import {
+    ArrowBigLeft,
+    ArrowBigRight
+} from 'lucide-react'
+
+import {
+    horarioType
+} from '../types/horario'
 
 import {
     useCentralDados,
@@ -12,17 +19,25 @@ import {
 
 export default function CallendarWeek() {
 
+
     // =========================================================
     // CONTEXT - DATA
     // =========================================================
 
     const {
+
         dataVisualizada,
+
         proximaSemana,
+
         semanaAnterior,
+
         definirDataVisualizada,
+
         selecionarHorario,
+
         setInterfaceView
+
     } = useCentralDados()
 
 
@@ -31,8 +46,75 @@ export default function CallendarWeek() {
     // =========================================================
 
     const {
-        agendamentos
+
+        agendamentos,
+carregarAgendamentosPorPeriodo   
     } = useAgendamentos()
+
+
+    // =========================================================
+    // CONFIGURAÇÃO DOS BLOCOS
+    // =========================================================
+
+    const DURACAO_BLOCO = 45
+
+    const TEMPO_TOLERANCIA = 20
+
+
+    // =========================================================
+    // LIMITE MÁXIMO DE AGENDAMENTO
+    // =========================================================
+    //
+    // O cliente pode agendar até 6 semanas a partir de hoje.
+    //
+    // 6 semanas = 42 dias
+    //
+    // =========================================================
+
+    const LIMITE_SEMANAS = 6
+
+    const LIMITE_DIAS =
+        LIMITE_SEMANAS * 7
+
+
+    // =========================================================
+    // HOJE
+    // =========================================================
+
+    const hoje =
+        new Date()
+
+    hoje.setHours(
+        0,
+        0,
+        0,
+        0
+    )
+
+
+    // =========================================================
+    // DATA MÁXIMA PARA AGENDAMENTO
+    // =========================================================
+
+    const dataMaximaAgendamento =
+        new Date(
+            hoje
+        )
+
+    dataMaximaAgendamento.setDate(
+
+        hoje.getDate() +
+
+        LIMITE_DIAS
+
+    )
+
+    dataMaximaAgendamento.setHours(
+        0,
+        0,
+        0,
+        0
+    )
 
 
     // =========================================================
@@ -78,32 +160,29 @@ export default function CallendarWeek() {
     // INÍCIO DA SEMANA
     // =========================================================
 
-    const inicioSemana = new Date(dataVisualizada)
+    const inicioSemana =
+        new Date(
+            dataVisualizada
+        )
 
-    inicioSemana.setHours(0, 0, 0, 0)
-
-    inicioSemana.setDate(
-        dataVisualizada.getDate() -
-        dataVisualizada.getDay()
-    )
-
-
-    // =========================================================
-    // HOJE
-    // =========================================================
-
-    const hoje = new Date()
-
-    hoje.setHours(
+    inicioSemana.setHours(
         0,
         0,
         0,
         0
     )
 
+    inicioSemana.setDate(
+
+        dataVisualizada.getDate() -
+
+        dataVisualizada.getDay()
+
+    )
+
 
     // =========================================================
-    // VERIFICAR SE DATA ESTÁ NO PASSADO
+    // VERIFICAR DATA PASSADA
     // =========================================================
 
     function dataEstaNoPassado(
@@ -111,7 +190,9 @@ export default function CallendarWeek() {
     ) {
 
         const dataVerificacao =
-            new Date(data)
+            new Date(
+                data
+            )
 
         dataVerificacao.setHours(
             0,
@@ -121,28 +202,322 @@ export default function CallendarWeek() {
         )
 
         return (
+
             dataVerificacao.getTime() <
+
             hoje.getTime()
+
         )
 
     }
 
 
     // =========================================================
-    // SELECIONAR HORÁRIO DA SEMANA
+    // VERIFICAR SE DATA ULTRAPASSOU O LIMITE
+    // =========================================================
+
+    function dataEstaAlemDoLimite(
+        data: Date
+    ) {
+
+        const dataVerificacao =
+            new Date(
+                data
+            )
+
+        dataVerificacao.setHours(
+            0,
+            0,
+            0,
+            0
+        )
+
+        return (
+
+            dataVerificacao.getTime() >
+
+            dataMaximaAgendamento.getTime()
+
+        )
+
+    }
+
+
+    // =========================================================
+    // VERIFICAR SE DATA ESTÁ INDISPONÍVEL
+    // =========================================================
+
+    function dataEstaIndisponivel(
+        data: Date
+    ) {
+
+        return (
+
+            dataEstaNoPassado(data) ||
+
+            dataEstaAlemDoLimite(data)
+
+        )
+
+    }
+
+
+    // =========================================================
+    // FORMATAR DATA
+    // =========================================================
+
+    function formatarData(
+        data: Date
+    ) {
+
+        return `${
+
+            data.getFullYear()
+
+        }-${String(
+
+            data.getMonth() + 1
+
+        ).padStart(
+
+            2,
+            '0'
+
+        )}-${String(
+
+            data.getDate()
+
+        ).padStart(
+
+            2,
+            '0'
+
+        )}`
+
+    }
+
+
+    // =========================================================
+    // CONVERTER HORÁRIO PARA MINUTOS
+    // =========================================================
+
+    function horarioParaMinutos(
+        horario: string
+    ) {
+
+        const [
+
+            horas,
+
+            minutos
+
+        ] = horario
+            .split(':')
+            .map(Number)
+
+
+        return (
+
+            horas * 60 +
+
+            minutos
+
+        )
+
+    }
+
+
+    // =========================================================
+    // VERIFICAR SE HORÁRIO ESTÁ OCUPADO
+    // =========================================================
+
+    function horarioEstaOcupado(
+
+        dia: Date,
+
+        horarioVerificado: string
+
+    ) {
+
+        const data =
+            formatarData(
+                dia
+            )
+
+
+        const minutoVerificado =
+            horarioParaMinutos(
+                horarioVerificado
+            )
+
+
+        return agendamentos.some(
+
+            agendamento => {
+
+
+                // =============================================
+                // IGNORAR OUTRAS DATAS
+                // =============================================
+
+                if (
+
+                    agendamento.data !==
+                    data
+
+                ) {
+
+                    return false
+
+                }
+
+
+                // =============================================
+                // IGNORAR CANCELADOS
+                // =============================================
+
+                if (
+
+                    agendamento.cancelado
+
+                ) {
+
+                    return false
+
+                }
+
+
+                // =============================================
+                // INÍCIO DO AGENDAMENTO
+                // =============================================
+
+                const inicioAgendamento =
+
+                    horarioParaMinutos(
+
+                        agendamento
+                            .hora_inicio
+                            .slice(0, 5)
+
+                    )
+
+
+                // =============================================
+                // FIM DO AGENDAMENTO
+                // =============================================
+
+                const fimAgendamento =
+
+                    horarioParaMinutos(
+
+                        agendamento
+                            .hora_fim
+                            .slice(0, 5)
+
+                    )
+
+
+                // =============================================
+                // DURAÇÃO
+                // =============================================
+
+                const duracaoAgendamento =
+
+                    fimAgendamento -
+
+                    inicioAgendamento
+
+
+                // =============================================
+                // BLOCOS
+                // =============================================
+
+                const blocosAgendamento =
+
+                    Math.max(
+
+                        1,
+
+                        Math.ceil(
+
+                            (
+
+                                duracaoAgendamento -
+
+                                TEMPO_TOLERANCIA
+
+                            ) /
+
+                            DURACAO_BLOCO
+
+                        )
+
+                    )
+
+
+                // =============================================
+                // FIM REAL DOS BLOCOS
+                // =============================================
+
+                const fimBlocos =
+
+                    inicioAgendamento +
+
+                    (
+
+                        blocosAgendamento *
+
+                        DURACAO_BLOCO
+
+                    )
+
+
+                // =============================================
+                // CONFLITO
+                // =============================================
+
+                return (
+
+                    minutoVerificado >=
+
+                    inicioAgendamento &&
+
+                    minutoVerificado <
+
+                    fimBlocos
+
+                )
+
+            }
+
+        )
+
+    }
+
+
+    // =========================================================
+    // SELECIONAR HORÁRIO
     // =========================================================
 
     function selecionarHorarioDaSemana(
+
         dia: Date,
+
         hora: string
+
     ) {
 
-        // ================================================
-        // NÃO PERMITIR DIAS PASSADOS
-        // ================================================
+
+        // =============================================
+        // DATA PASSADA
+        // =============================================
 
         if (
-            dataEstaNoPassado(dia)
+
+            dataEstaNoPassado(
+                dia
+            )
+
         ) {
 
             return
@@ -150,11 +525,66 @@ export default function CallendarWeek() {
         }
 
 
-        definirDataVisualizada(dia)
+        // =============================================
+        // DATA ALÉM DO LIMITE
+        // =============================================
 
-        selecionarHorario(hora)
+        if (
 
-        setInterfaceView('day')
+            dataEstaAlemDoLimite(
+                dia
+            )
+
+        ) {
+
+            return
+
+        }
+
+
+        // =============================================
+        // HORÁRIO OCUPADO
+        // =============================================
+
+        if (
+
+            horarioEstaOcupado(
+                dia,
+                hora
+            )
+
+        ) {
+
+            return
+
+        }
+
+
+        // =============================================
+        // ALTERAR DATA
+        // =============================================
+
+        definirDataVisualizada(
+            dia
+        )
+
+
+        // =============================================
+        // ALTERAR HORÁRIO
+        // =============================================
+
+        selecionarHorario(
+            hora
+        )
+
+
+        // =============================================
+        // ABRIR DIA
+        // =============================================
+
+        setInterfaceView(
+            'day'
+        )
 
     }
 
@@ -165,18 +595,31 @@ export default function CallendarWeek() {
 
     const diasSemana: Date[] = []
 
+
     for (
+
         let i = 0;
+
         i < 7;
+
         i++
+
     ) {
 
         const dia =
-            new Date(inicioSemana)
+            new Date(
+                inicioSemana
+            )
+
 
         dia.setDate(
-            inicioSemana.getDate() + i
+
+            inicioSemana.getDate() +
+
+            i
+
         )
+
 
         dia.setHours(
             0,
@@ -185,7 +628,10 @@ export default function CallendarWeek() {
             0
         )
 
-        diasSemana.push(dia)
+
+        diasSemana.push(
+            dia
+        )
 
     }
 
@@ -200,17 +646,48 @@ export default function CallendarWeek() {
     const ultimoDia =
         diasSemana[6]
 
+        
+        // =========================================================
+    // BUSCAR AGENDAMENTOS DA SEMANA VISÍVEL
+    // =========================================================
 
+    useEffect(() => {
+
+        const dataInicio =
+            formatarData(
+                primeiroDia
+            )
+
+        const dataFim =
+            formatarData(
+                ultimoDia
+            )
+
+        void carregarAgendamentosPorPeriodo(
+            dataInicio,
+            dataFim
+        )
+
+    }, [
+        primeiroDia.getTime(),
+        ultimoDia.getTime(),
+        carregarAgendamentosPorPeriodo
+    ])
     // =========================================================
     // INÍCIO DA SEMANA ATUAL
     // =========================================================
 
     const inicioSemanaAtual =
-        new Date(hoje)
+        new Date(
+            hoje
+        )
 
     inicioSemanaAtual.setDate(
+
         hoje.getDate() -
+
         hoje.getDay()
+
     )
 
     inicioSemanaAtual.setHours(
@@ -221,81 +698,61 @@ export default function CallendarWeek() {
     )
 
 
+    // =========================================================
+    // VERIFICAR SEMANA ATUAL
+    // =========================================================
+
     const estaNaSemanaAtual =
+
         inicioSemana.getTime() ===
+
         inicioSemanaAtual.getTime()
 
 
     // =========================================================
-    // FORMATAR DATA
+    // PRÓXIMA SEMANA
     // =========================================================
 
-    function formatarData(
-        data: Date
-    ) {
-
-        return `${data.getFullYear()}-${String(
-            data.getMonth() + 1
-        ).padStart(2, '0')}-${String(
-            data.getDate()
-        ).padStart(2, '0')}`
-
-    }
-
-
-    // =========================================================
-    // ABRIR DIA
-    // =========================================================
-
-    function abrirDia(
-        dia: Date,
-        hora: string
-    ) {
-
-        // ================================================
-        // NÃO PERMITIR DATA PASSADA
-        // ================================================
-
-        if (
-            dataEstaNoPassado(dia)
-        ) {
-
-            return
-
-        }
-
-
-        definirDataVisualizada(dia)
-
-        selecionarHorario(hora)
-
-        setInterfaceView('day')
-
-    }
-
-
-    // =========================================================
-    // VERIFICAR SE HORÁRIO ESTÁ OCUPADO
-    // =========================================================
-
-    function horarioEstaOcupado(
-        dia: Date,
-        hora: string
-    ) {
-
-        const data =
-            formatarData(dia)
-
-        return agendamentos.some(
-            (agendamento) =>
-
-                agendamento.data === data &&
-
-                agendamento.hora === hora
-
+    const inicioProximaSemana =
+        new Date(
+            inicioSemana
         )
 
-    }
+    inicioProximaSemana.setDate(
+
+        inicioSemana.getDate() +
+
+        7
+
+    )
+
+    inicioProximaSemana.setHours(
+        0,
+        0,
+        0,
+        0
+    )
+
+
+    // =========================================================
+    // VERIFICAR LIMITE DA PRÓXIMA SEMANA
+    // =========================================================
+    //
+    // Se o primeiro dia da próxima semana já estiver depois
+    // do limite máximo, não permitimos avançar.
+    //
+    // =========================================================
+
+    const proximaSemanaUltrapassaLimite =
+
+        inicioProximaSemana.getTime() >
+
+        dataMaximaAgendamento.getTime()
+
+
+    const podeAvancarSemana =
+
+        !proximaSemanaUltrapassaLimite
 
 
     // =========================================================
@@ -351,9 +808,13 @@ export default function CallendarWeek() {
 
                 <button
 
-                    onClick={semanaAnterior}
+                    onClick={
+                        semanaAnterior
+                    }
 
-                    disabled={estaNaSemanaAtual}
+                    disabled={
+                        estaNaSemanaAtual
+                    }
 
                     className={`
                         flex
@@ -365,17 +826,27 @@ export default function CallendarWeek() {
                         transition-all
                         duration-200
 
-                        ${estaNaSemanaAtual
-                            ? 'bg-[#333333] cursor-not-allowed'
-                            : 'bg-[#D3AF37] hover:bg-[#C4A032] hover:scale-105'
+                        ${
+                            estaNaSemanaAtual
+
+                                ? 'bg-[#333333] cursor-not-allowed'
+
+                                : 'bg-[#D3AF37] hover:bg-[#C4A032] hover:scale-105'
                         }
                     `}
 
                 >
 
-                    <ArrowBigLeft 
-                        color={estaNaSemanaAtual ? '#757575' : '#121212'} 
+                    <ArrowBigLeft
+
+                        color={
+                            estaNaSemanaAtual
+                                ? '#757575'
+                                : '#121212'
+                        }
+
                         size={24}
+
                     />
 
                 </button>
@@ -383,51 +854,99 @@ export default function CallendarWeek() {
 
                 {/* PERÍODO */}
 
-                <h1 className="
-                    text-[25px]
-                    text-[#FFFFFF]
-                    font-bold
-                    text-center
-                ">
+                <div className="flex flex-col items-center">
 
-                    {primeiroDia.getDate()}
-                    /
-                    {primeiroDia.getMonth() + 1}
+                    <h1 className="
+                        text-[25px]
+                        text-[#FFFFFF]
+                        font-bold
+                        text-center
+                    ">
 
-                    {' - '}
+                        {primeiroDia.getDate()}
+                        /
+                        {primeiroDia.getMonth() + 1}
 
-                    {ultimoDia.getDate()}
-                    /
-                    {ultimoDia.getMonth() + 1}
+                        {' - '}
 
-                </h1>
+                        {ultimoDia.getDate()}
+                        /
+                        {ultimoDia.getMonth() + 1}
+
+                    </h1>
+
+                    <span className="
+                        text-[11px]
+                        text-[#757575]
+                        mt-1
+                    ">
+
+                        Agendamentos até{' '}
+
+                        {dataMaximaAgendamento.getDate()}
+                        /
+                        {dataMaximaAgendamento.getMonth() + 1}
+                        /
+                        {dataMaximaAgendamento.getFullYear()}
+
+                    </span>
+
+                </div>
 
 
                 {/* PRÓXIMA SEMANA */}
 
                 <button
 
-                    onClick={proximaSemana}
+                    onClick={() => {
 
-                    className="
+                        if (
+                            !podeAvancarSemana
+                        ) {
+
+                            return
+
+                        }
+
+                        proximaSemana()
+
+                    }}
+
+                    disabled={
+                        !podeAvancarSemana
+                    }
+
+                    className={`
                         flex
                         w-[50px]
                         h-[50px]
-                        bg-[#D3AF37]
                         rounded-full
                         items-center
                         justify-center
-                        hover:bg-[#C4A032]
-                        hover:scale-105
                         transition-all
                         duration-200
-                    "
+
+                        ${
+                            !podeAvancarSemana
+
+                                ? 'bg-[#333333] cursor-not-allowed'
+
+                                : 'bg-[#D3AF37] hover:bg-[#C4A032] hover:scale-105'
+                        }
+                    `}
 
                 >
 
-                    <ArrowBigRight 
-                        color="#121212" 
+                    <ArrowBigRight
+
+                        color={
+                            !podeAvancarSemana
+                                ? '#757575'
+                                : '#121212'
+                        }
+
                         size={24}
+
                     />
 
                 </button>
@@ -448,31 +967,49 @@ export default function CallendarWeek() {
             ">
 
 
-                {/* ESPAÇO DO HORÁRIO */}
-
                 <div />
 
 
-                {/* DIAS */}
-
                 {diasSemana.map(
+
                     (
                         dia,
                         index
                     ) => {
 
                         const passado =
-                            dataEstaNoPassado(dia)
+                            dataEstaNoPassado(
+                                dia
+                            )
 
-                        const isHoje = 
-                            dia.getTime() === hoje.getTime()
+
+                        const alemDoLimite =
+                            dataEstaAlemDoLimite(
+                                dia
+                            )
+
+
+                        const indisponivel =
+                            passado ||
+                            alemDoLimite
+
+
+                        const isHoje =
+
+                            dia.getTime() ===
+
+                            hoje.getTime()
 
 
                         return (
 
                             <div
 
-                                key={formatarData(dia)}
+                                key={
+                                    formatarData(
+                                        dia
+                                    )
+                                }
 
                                 className={`
                                     aspect-square
@@ -486,11 +1023,16 @@ export default function CallendarWeek() {
                                     duration-200
                                     border-2
 
-                                    ${passado
-                                        ? 'bg-[#333333] border-[#333333]'
-                                        : isHoje
-                                            ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
-                                            : 'bg-[#1E1E1E] border-[#2A2A2A]'
+                                    ${
+                                        indisponivel
+
+                                            ? 'bg-[#333333] border-[#333333]'
+
+                                            : isHoje
+
+                                                ? 'bg-[#1E1E1E] border-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
+
+                                                : 'bg-[#1E1E1E] border-[#2A2A2A]'
                                     }
                                 `}
 
@@ -498,30 +1040,50 @@ export default function CallendarWeek() {
 
                                 <span className={`
                                     text-xs
-                                    ${passado ? 'text-[#757575]' : 'text-[#A0A0A0]'}
+                                    ${
+                                        indisponivel
+
+                                            ? 'text-[#757575]'
+
+                                            : 'text-[#A0A0A0]'
+                                    }
                                 `}>
 
-                                    {diaSemanaNome[index].slice(0, 3)}
+                                    {
+                                        diaSemanaNome[
+                                            index
+                                        ].slice(
+                                            0,
+                                            3
+                                        )
+                                    }
 
                                 </span>
 
 
                                 <span className={`
                                     text-lg
-                                    ${passado 
-                                        ? 'text-[#757575]' 
-                                        : isHoje 
-                                            ? 'text-[#D3AF37]' 
-                                            : 'text-[#FFFFFF]'
+                                    ${
+                                        indisponivel
+
+                                            ? 'text-[#757575]'
+
+                                            : isHoje
+
+                                                ? 'text-[#D3AF37]'
+
+                                                : 'text-[#FFFFFF]'
                                     }
                                 `}>
 
-                                    {dia.getDate()}
+                                    {
+                                        dia.getDate()
+                                    }
 
                                 </span>
 
 
-                                {passado && (
+                                {indisponivel && (
 
                                     <span className="
                                         text-[9px]
@@ -542,7 +1104,6 @@ export default function CallendarWeek() {
 
                 )}
 
-
             </div>
 
 
@@ -558,24 +1119,26 @@ export default function CallendarWeek() {
 
 
                 {horarios.map(
-                    (horario) => (
+
+                    horario => (
 
                         <div
 
-                            key={horario.hora}
+                            key={
+                                horario.hora
+                            }
 
                             className="
                                 grid
                                 grid-cols-8
                                 gap-2
                             "
-
                         >
 
 
-                            {/* =============================================
+                            {/* =================================================
                                 HORA
-                            ============================================== */}
+                            ================================================== */}
 
                             <div className="
                                 aspect-square
@@ -591,31 +1154,52 @@ export default function CallendarWeek() {
                                 border-[#2A2A2A]
                             ">
 
-                                {horario.hora}
+                                {
+                                    horario.hora
+                                }
 
                             </div>
 
 
-                            {/* =============================================
+                            {/* =================================================
                                 DIAS
-                            ============================================== */}
+                            ================================================== */}
 
                             {diasSemana.map(
-                                (dia) => {
+
+                                dia => {
 
                                     const passado =
-                                        dataEstaNoPassado(dia)
+
+                                        dataEstaNoPassado(
+                                            dia
+                                        )
+
+
+                                    const alemDoLimite =
+
+                                        dataEstaAlemDoLimite(
+                                            dia
+                                        )
 
 
                                     const ocupado =
+
                                         horarioEstaOcupado(
+
                                             dia,
+
                                             horario.hora
+
                                         )
 
 
                                     const indisponivel =
+
                                         passado ||
+
+                                        alemDoLimite ||
+
                                         ocupado
 
 
@@ -640,8 +1224,11 @@ export default function CallendarWeek() {
 
 
                                                 selecionarHorarioDaSemana(
+
                                                     dia,
+
                                                     horario.hora
+
                                                 )
 
                                             }}
@@ -659,7 +1246,9 @@ export default function CallendarWeek() {
                                                 border-2
 
                                                 ${
-                                                    passado
+                                                    passado ||
+
+                                                    alemDoLimite
 
                                                         ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
 
@@ -673,50 +1262,63 @@ export default function CallendarWeek() {
 
                                         >
 
-
                                             <span className={`
                                                 text-[10px]
                                                 font-medium
 
                                                 ${
-                                                    passado || ocupado
+                                                    passado ||
+
+                                                    alemDoLimite ||
+
+                                                    ocupado
+
                                                         ? 'text-[#757575]'
+
                                                         : 'text-[#E0E0E0]'
                                                 }
                                             `}>
 
-                                                {passado
-                                                    ? 'indis.'
-                                                    : ocupado
-                                                        ? 'ocupado'
-                                                        : 'livre'
+                                                {
+                                                    passado
+
+                                                        ? 'indis.'
+
+                                                        : alemDoLimite
+
+                                                            ? 'indis.'
+
+                                                            : ocupado
+
+                                                                ? 'ocupado'
+
+                                                                : 'livre'
                                                 }
 
                                             </span>
 
 
-                                            <div
-                                                className={`
-                                                    w-[10px]
-                                                    h-[10px]
-                                                    rounded-full
-                                                    transition-all
-                                                    duration-200
+                                            <div className={`
+                                                w-[10px]
+                                                h-[10px]
+                                                rounded-full
+                                                transition-all
+                                                duration-200
 
-                                                    ${
-                                                        passado
+                                                ${
+                                                    passado ||
 
-                                                            ? 'bg-[#757575]'
+                                                    alemDoLimite
 
-                                                            : ocupado
+                                                        ? 'bg-[#757575]'
 
-                                                                ? 'bg-[#D3AF37]'
+                                                        : ocupado
 
-                                                                : 'bg-[#FFFFFF]'
-                                                    }
-                                                `}
-                                            />
+                                                            ? 'bg-[#D3AF37]'
 
+                                                            : 'bg-[#FFFFFF]'
+                                                }
+                                            `} />
 
                                         </div>
 
@@ -726,13 +1328,11 @@ export default function CallendarWeek() {
 
                             )}
 
-
                         </div>
 
                     )
 
                 )}
-
 
             </div>
 

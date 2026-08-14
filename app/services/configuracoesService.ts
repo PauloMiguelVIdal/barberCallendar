@@ -1,35 +1,20 @@
-import { supabase } from '@/lib/supabase'
+import {
+    buscarConfiguracoes,
+    atualizarConfiguracoes
+} from '../repositories/configuracoesRepository'
 
-export async function buscarConfiguracoes() {
+export async function obterConfiguracoes() {
 
-    const { data, error } = await supabase
-        .from('configuracoes')
-        .select('*')
-        .single()
-
-    if (error) {
-        throw error
-    }
-
-    return data
+    return await buscarConfiguracoes()
 
 }
 
-export async function atualizarConfiguracoes(
+export async function salvarConfiguracoes(
     configuracoes: any
 ) {
 
-    const { data, error } = await supabase
-        .from('configuracoes')
-        .update(configuracoes)
-        .eq('id', configuracoes.id)
-        .select()
-        .single()
-
-    if (error) {
-        throw error
-    }
-
-    return data
+    return await atualizarConfiguracoes(
+        configuracoes
+    )
 
 }

@@ -20,6 +20,10 @@ import {
 
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import {
+    obterConfiguracoes
+} from './services/configuracoesService'
+import { obterServicos } from "./services/servicoService"
 
 
 
@@ -27,22 +31,21 @@ import { supabase } from '@/lib/supabase'
 
 
 export default function Home() {
-    useEffect(() => {
 
-        async function testarConexao() {
 
-            const { data, error } = await supabase
-                .from('servicos')
-                .select('*')
+useEffect(() => {
 
-            console.log('Dados:', data)
-            console.log('Erro:', error)
+    async function teste() {
 
-        }
+        const servicos = await obterServicos()
 
-        testarConexao()
+        console.log(servicos)
 
-    }, [])
+    }
+
+    teste()
+
+}, [])
 
 
 

@@ -12,8 +12,18 @@ import {
 } from 'lucide-react'
 
 import Services from './Services'
+import { useServicos } from '../hooks/useServicos'
+import { ServicoSelecionadoType } from '../types/service'
 
-import { servicesType } from '../types/service'
+
+import {
+  buscarClientePorTelefone,
+  criarCliente
+} from '../services/clienteService'
+
+// import {
+//   criarAgendamento
+// } from '../services/agendamentoService'
 
 import {
   useCentralDados
@@ -46,15 +56,6 @@ type Props = {
   horario: string
 
   fecharModal: () => void
-
-  agendarHorario: (
-    nome: string,
-    telefone: string,
-    data: string,
-    horario: string,
-    blocos: number,
-    duracao: number
-  ) => void
 
   data: string
 
@@ -117,37 +118,37 @@ const HORARIOS_DISPONIVEIS = [
 // DURAÇÃO DOS SERVIÇOS
 // =========================================================
 
-const DURACAO_SERVICOS: Record<string, number> = {
+// const DURACAO_SERVICOS: Record<string, number> = {
 
-  'Corte social': 25,
+//   'Corte social': 25,
 
-  'Degrade 0/1/2': 30,
+//   'Degrade 0/1/2': 30,
 
-  'Navalhado': 35,
+//   'Navalhado': 35,
 
-  'Corte tesoura': 45,
-  
-  'Corte kids': 45,
-  
-  
-  'Barba': 20,
-  
-  'Sobrancelha': 5,
-  
-  
-  'Alisamento': 30,
+//   'Corte tesoura': 45,
 
-  'Progressiva': 105,
+//   'Corte kids': 45,
 
-  
-  'Pigmentação': 20,
-  
-  'Tintura': 20,
 
-  'Luzes': 110,
-  
-  'Platinado': 130,
-}
+//   'Barba': 20,
+
+//   'Sobrancelha': 5,
+
+
+//   'Alisamento': 30,
+
+//   'Progressiva': 105,
+
+
+//   'Pigmentação': 20,
+
+//   'Tintura': 20,
+
+//   'Luzes': 110,
+
+//   'Platinado': 130,
+// }
 
 // =========================================================
 // COMPONENTE
@@ -159,7 +160,7 @@ export default function Formulario({
 
   fecharModal,
 
-  agendarHorario,
+
 
   data,
 
@@ -171,13 +172,17 @@ export default function Formulario({
   // CONTEXT
   // =======================================================
 
-  const {
+  const [
+    salvando,
+    setSalvando
+  ] = useState(false)
 
-    selecionarHorario,
-    setInterfaceView,
-    definirDataAgendamento
-
-  } = useCentralDados()
+const {
+  selecionarHorario,
+  setInterfaceView,
+  definirDataAgendamento,
+  adicionarAgendamento         
+} = useCentralDados()
 
   // =======================================================
   // DADOS DO CLIENTE
@@ -217,118 +222,126 @@ export default function Formulario({
   // SERVIÇOS
   // =======================================================
 
+  const {
+    servicos,
+    carregando,
+    erro
+  } = useServicos()
+
   const [
-    services,
-    setServices
-  ] = useState<servicesType[]>([
+    servicosSelecionadosIds,
+    setServicosSelecionadosIds
+  ] = useState<string[]>([])
 
-    {
-      checkbox: false,
-      serviço: 'Corte social',
-      price: 30
-    },
+  // const [
+  //   services,
+  //   setServices
+  // ] = useState<ServicoSelecionadoType []>([
 
-    {
-      checkbox: false,
-      serviço: 'Degrade 0/1/2',
-      price: 35
-    },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Corte social',
+  //     price: 30
+  //   },
 
-    {
-      checkbox: false,
-      serviço: 'Navalhado',
-      price: 40
-    },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Degrade 0/1/2',
+  //     price: 35
+  //   },
 
-    
-    {
-      checkbox: false,
-      serviço: 'Corte tesoura',
-      price: 45
-    },
-    {
-      checkbox: false,
-      serviço: 'Corte kids',
-      price: 40
-    },
-
-    {
-      checkbox: false,
-      serviço: 'Barba',
-      price: 30
-    },
-
-    {
-      checkbox: false,
-      serviço: 'Sobrancelha',
-      price: 10
-    },
-
-    {
-      checkbox: false,
-      serviço: 'Alisamento',
-      price: 45
-    },
-    {
-      checkbox: false,
-      serviço: 'Progressiva',
-      price: 150
-    },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Navalhado',
+  //     price: 40
+  //   },
 
 
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Corte tesoura',
+  //     price: 45
+  //   },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Corte kids',
+  //     price: 40
+  //   },
 
-    {
-      checkbox: false,
-      serviço: 'Pigmentação',
-      price: 25
-    },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Barba',
+  //     price: 30
+  //   },
 
-    {
-      checkbox: false,
-      serviço: 'Tintura',
-      price: 20
-    },
-        {
-      checkbox: false,
-      serviço: 'Luzes',
-      price: 100
-    },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Sobrancelha',
+  //     price: 10
+  //   },
 
-    {
-      checkbox: false,
-      serviço: 'Platinado',
-      price: 120
-    },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Alisamento',
+  //     price: 45
+  //   },
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Progressiva',
+  //     price: 150
+  //   },
 
-  ])
+
+
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Pigmentação',
+  //     price: 25
+  //   },
+
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Tintura',
+  //     price: 20
+  //   },
+  //       {
+  //     checkbox: false,
+  //     serviço: 'Luzes',
+  //     price: 100
+  //   },
+
+  //   {
+  //     checkbox: false,
+  //     serviço: 'Platinado',
+  //     price: 120
+  //   },
+
+  // ])
 
   // =======================================================
   // SELECIONAR SERVIÇO
   // =======================================================
 
-  function selecionarServicos(
-    index: number
+  function selecionarServico(
+    servicoId: string
   ) {
 
-    setServices(prev =>
+    setServicosSelecionadosIds(prev => {
 
-      prev.map(
-        (service, i) =>
+      if (prev.includes(servicoId)) {
 
-          i === index
+        return prev.filter(
+          id => id !== servicoId
+        )
 
-            ? {
-              ...service,
+      }
 
-              checkbox:
-                !service.checkbox
-            }
+      return [
+        ...prev,
+        servicoId
+      ]
 
-            : service
-
-      )
-
-    )
+    })
 
   }
 
@@ -369,36 +382,26 @@ export default function Formulario({
   // =======================================================
 
   const servicosSelecionados =
-
-    services.filter(
-      service =>
-        service.checkbox
+    servicos.filter(
+      servico =>
+        servicosSelecionadosIds.includes(
+          servico.id
+        )
     )
-
   // =======================================================
   // TEMPO TOTAL
   // =======================================================
 
   const tempoTotal =
-
     servicosSelecionados.reduce(
 
       (
         total,
-        service
+        servico
       ) =>
 
         total +
-
-        (
-          DURACAO_SERVICOS[
-          service.serviço
-          ]
-
-          ??
-
-          DURACAO_BLOCO
-        ),
+        servico.duracao,
 
       0
 
@@ -436,17 +439,15 @@ export default function Formulario({
   // =======================================================
 
   const somaFatu =
-
     servicosSelecionados.reduce(
 
       (
         total,
-        service
+        servico
       ) =>
 
         total +
-
-        service.price,
+        servico.valor,
 
       0
 
@@ -1314,105 +1315,371 @@ export default function Formulario({
 
   }
 
+
+  function calcularHoraFim(
+
+    horaInicio: string,
+
+    duracaoMinutos: number
+
+  ) {
+
+    const [
+      horas,
+      minutos
+    ] = horaInicio
+      .split(':')
+      .map(Number)
+
+
+    const totalMinutos =
+
+      horas * 60 +
+      minutos +
+      duracaoMinutos
+
+
+    const horasFim =
+      Math.floor(
+        totalMinutos / 60
+      )
+
+
+    const minutosFim =
+      totalMinutos % 60
+
+
+    return (
+
+      `${String(
+        horasFim
+      ).padStart(2, '0')}:` +
+
+      `${String(
+        minutosFim
+      ).padStart(2, '0')}`
+
+    )
+
+  }
+
+
+
   // =======================================================
   // CONFIRMAR AGENDAMENTO
   // =======================================================
 
-  function confirmarAgendamento() {
 
-    if (
 
-      !nome.trim()
 
-    ) {
+  async function confirmarAgendamento() {
+
+    // =====================================================
+    // VALIDAR NOME
+    // =====================================================
+
+    if (!nome.trim()) {
 
       alert(
-
         'Digite seu nome para realizar o agendamento.'
-
       )
 
       return
 
     }
 
-    if (
 
-      !telefoneValido()
+    // =====================================================
+    // VALIDAR TELEFONE
+    // =====================================================
 
-    ) {
+    if (!telefoneValido()) {
 
       setErroTelefone(
-
         'Digite um telefone celular válido. Exemplo: (11) 99999-9999'
-
       )
 
       return
 
     }
 
-    if (
 
+    // =====================================================
+    // VALIDAR SERVIÇOS
+    // =====================================================
+
+    if (
       servicosSelecionados.length === 0
-
     ) {
 
       alert(
-
         'Selecione pelo menos um serviço.'
-
       )
 
       return
 
     }
+
+
+    // =====================================================
+    // VALIDAR DISPONIBILIDADE
+    // =====================================================
 
     if (
-
       !verificarDisponibilidade(
-
         dataSelecionada,
-
         horarioSelecionado
-
       )
-
     ) {
 
       alert(
-
         'Esse horário não possui blocos consecutivos suficientes para realizar todos os serviços selecionados. Escolha outro horário.'
-
       )
 
       return
 
     }
 
-    selecionarHorario(
-      horarioSelecionado
-    )
 
-    definirDataAgendamento(
-      dataSelecionada
-    )
+    try {
 
-    agendarHorario(
+      setSalvando(true)
 
-      nome.trim(),
 
-      telefone,
+      // ===================================================
+      // TELEFONE SEM MÁSCARA
+      // ===================================================
 
+      const telefoneBanco =
+        telefone.replace(
+          /\D/g,
+          ''
+        )
+
+
+      // ===================================================
+      // BUSCAR CLIENTE
+      // ===================================================
+
+      let cliente =
+        await buscarClientePorTelefone(
+          telefoneBanco
+        )
+
+
+      // ===================================================
+      // CRIAR CLIENTE SE NÃO EXISTIR
+      // ===================================================
+
+      if (!cliente) {
+
+        cliente = await criarCliente({
+
+          nome:
+            nome.trim(),
+
+          telefone:
+            telefoneBanco,
+
+          email:
+            null,
+
+          observacoes:
+            null
+
+        })
+
+      }
+
+
+      // ===================================================
+      // CALCULAR HORA FINAL
+      // ===================================================
+
+      const horaFim =
+        calcularHoraFim(
+          horarioSelecionado,
+          tempoTotal
+        )
+
+
+      // ===================================================
+      // CRIAR AGENDAMENTO
+      // ===================================================
+
+      // const novoAgendamento =
+      //   await criarAgendamento({
+
+      //     cliente_id:
+      //       cliente.id,
+
+      //     servicos_id:
+      //       servicosSelecionadosIds,
+
+      //     data:
+      //       dataSelecionada,
+
+      //     hora_inicio:
+      //       horarioSelecionado,
+
+      //     hora_fim:
+      //       horaFim,
+
+      //     observacoes:
+      //       undefined,
+
+      //     concluido:
+      //       false,
+
+      //     cancelado:
+      //       false
+
+      //   })
+
+await adicionarAgendamento(
+
+  // ==========================================
+  // DADOS PARA O SUPABASE
+  // ==========================================
+
+  {
+    cliente_id:
+      cliente.id,
+
+    servicos_id:
+      servicosSelecionadosIds,
+
+    data:
       dataSelecionada,
 
+    hora_inicio:
       horarioSelecionado,
 
+    hora_fim:
+      horaFim,
+
+    observacoes:
+      undefined,
+
+    concluido:
+      false,
+
+    cancelado:
+      false
+  },
+
+
+  // ==========================================
+  // DADOS PARA O LOCAL STORAGE
+  // ==========================================
+
+  {
+    data:
+      dataSelecionada,
+
+    hora:
+      horarioSelecionado,
+
+    hora_fim:
+      horaFim,
+
+    nome:
+      nome.trim(),
+
+    telefone:
+      telefoneBanco,
+
+    servicos:
+      servicosSelecionados.map(
+        servico => ({
+
+          id:
+            servico.id,
+
+          nome:
+            servico.nome,
+
+          duracao:
+            servico.duracao,
+
+          valor:
+            servico.valor
+
+        })
+      ),
+
+    duracao:
+      tempoTotal,
+
+    valor:
+      somaFatu,
+
+    blocos:
       blocosNecessarios,
 
-      tempoTotal
+    cancelado:
+      false
 
-    )
+  }
+
+)
+
+
+      // ===================================================
+      // LOG PARA CONFERÊNCIA
+      // ===================================================
+
+      // console.log(
+      //   'Agendamento criado no Supabase:',
+      //   novoAgendamento
+      // )
+
+
+      // ===================================================
+      // ATUALIZAR CONTEXT
+      // ===================================================
+
+      selecionarHorario(
+        horarioSelecionado
+      )
+
+      definirDataAgendamento(
+        dataSelecionada
+      )
+
+
+      // ===================================================
+      // FECHAR MODAL
+      // ===================================================
+
+      fecharModal()
+
+
+      // ===================================================
+      // IR PARA AGENDAMENTOS
+      // ===================================================
+
+      setInterfaceView(
+        'appointments'
+      )
+
+
+    } catch (error) {
+
+      console.error(
+        'Erro ao realizar agendamento:',
+        error
+      )
+
+      alert(
+        'Não foi possível realizar o agendamento. Tente novamente.'
+      )
+
+    } finally {
+
+      setSalvando(false)
+
+    }
 
   }
 
@@ -1487,7 +1754,7 @@ export default function Formulario({
 
         >
 
-          <X 
+          <X
             size={24}
             className="
               text-[#D3AF37]
@@ -1612,50 +1879,61 @@ export default function Formulario({
             LISTA DE SERVIÇOS
         ================================================= */}
 
-        <div className="
-          bg-[#121212]
-          w-full
-          rounded-xl
-          p-2
-          flex
-          flex-col
-          gap-1
-          border
-          border-[#2A2A2A]
-        ">
+        {carregando && (
 
-          {services.map(
+          <p className="
+        text-center
+        text-[#A0A0A0]
+        p-4
+    ">
+            Carregando serviços...
+          </p>
 
-            (
-              serviço,
-              index
-            ) => (
+        )}
+        {erro && (
 
-              <Services
+          <p className="
+        text-center
+        text-[#FF4D4D]
+        p-4
+    ">
+            {erro}
+          </p>
 
-                key={
-                  serviço.serviço
-                }
+        )}
+        {!carregando &&
+          !erro &&
+          servicos.map(servico => (
 
-                serviços={
-                  serviço
-                }
+            <Services
 
-                onServices={() =>
+              key={
+                servico.id
+              }
 
-                  selecionarServicos(
-                    index
-                  )
+              serviços={{
 
-                }
+                checkbox:
+                  servicosSelecionadosIds.includes(
+                    servico.id
+                  ),
 
-              />
+                servico
 
-            )
+              }}
 
-          )}
+              onServices={() =>
 
-        </div>
+                selecionarServico(
+                  servico.id
+                )
+
+              }
+
+            />
+
+          ))
+        }
 
         {/* =================================================
             RESUMO DO AGENDAMENTO
@@ -2033,43 +2311,50 @@ export default function Formulario({
             transition-colors
           ">
 
-            <button
+           <button
 
-              type="button"
+  type="button"
 
-              className="
-                w-full
-                p-4
-                flex
-                items-center
-                justify-center
-                gap-3
-                rounded-xl
-                text-[#121212]
-                font-bold
-              "
+  disabled={salvando}
 
-              onClick={() => {
-                confirmarAgendamento();
-                setInterfaceView('appointments');
-              }}
+  className="
+    w-full
+    p-4
+    flex
+    items-center
+    justify-center
+    gap-3
+    rounded-xl
+    text-[#121212]
+    font-bold
+    disabled:opacity-50
+    disabled:cursor-not-allowed
+  "
 
-            >
+  onClick={
+    confirmarAgendamento
+  }
 
-              <CalendarCheck2 size={20} />
+>
 
-              <span className="
-                font-bold
-                text-center
-                text-sm
-                tracking-wider
-              ">
+  <CalendarCheck2 size={20} />
 
-                CONFIRMAR AGENDAMENTO
+  <span className="
+    font-bold
+    text-center
+    text-sm
+    tracking-wider
+  ">
 
-              </span>
+    {
+      salvando
+        ? 'SALVANDO...'
+        : 'CONFIRMAR AGENDAMENTO'
+    }
 
-            </button>
+  </span>
+
+</button>
 
           </div>
 

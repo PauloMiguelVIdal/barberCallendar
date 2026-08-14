@@ -1,21 +1,46 @@
 
+// export type AgendamentoType = {
+
+//   id: string
+
+//   data: string
+
+//   hora: string
+
+//   nome: string
+
+//   telefone: string
+
+//   // Quantidade de blocos de 45 minutos
+//   blocos?: number
+
+//   // Duração total em minutos
+//   duracao?: number
+
+// }
+
+import { AgendamentoServicoType } from "./AgendamentoServico"
+
 export type AgendamentoType = {
 
-  id: string
+    id: string
 
-  data: string
+    cliente_id: string
 
-  hora: string
+    data: string
 
-  nome: string
+    hora_inicio: string
 
-  telefone: string
+    hora_fim: string
 
-  // Quantidade de blocos de 45 minutos
-  blocos?: number
+    observacoes: string | null
 
-  // Duração total em minutos
-  duracao?: number
+    concluido: boolean
+
+    cancelado: boolean
+
+    created_at: string
+
+    agendamento_servicos?: AgendamentoServicoType[]
 
 }
-

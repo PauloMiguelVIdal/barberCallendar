@@ -1,5 +1,9 @@
-export type servicesType = {
+import { ServicoType } from "./Servico"
+
+export type ServicoSelecionadoType = {
+
     checkbox: boolean
-    serviço: string
-    price: number
+
+    servico: ServicoType
+
 }

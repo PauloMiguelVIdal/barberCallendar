@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -22,6 +23,10 @@ import {
   useAgendamentos
 } from '../context/PersistData'
 
+import {
+  AgendamentoType
+} from '../types/Agendamento'
+
 
 export default function Callendar() {
 
@@ -43,9 +48,7 @@ export default function Callendar() {
   // =========================================================
 
   const {
-    agendamentos,
-    adicionarAgendamento,
-    adicionarAgendamentoCliente
+    agendamentos
   } = useAgendamentos()
 
 
@@ -73,6 +76,12 @@ export default function Callendar() {
   )
 
 
+
+const DURACAO_BLOCO = 45
+
+// Tempo que pode ultrapassar o bloco sem consumir o próximo
+const TEMPO_TOLERANCIA = 20
+
   // =========================================================
   // DATA VISUALIZADA
   // =========================================================
@@ -85,21 +94,6 @@ export default function Callendar() {
 
   const anoVisualizado =
     dataVisualizada.getFullYear()
-
-
-  // =========================================================
-  // DIAS DA SEMANA
-  // =========================================================
-
-  const diasSemana = [
-    'Dom',
-    'Seg',
-    'Ter',
-    'Qua',
-    'Qui',
-    'Sex',
-    'Sáb'
-  ]
 
 
   // =========================================================
@@ -178,15 +172,25 @@ export default function Callendar() {
 
 
   // =========================================================
-  // VERIFICAR SE UM HORÁRIO ESTÁ OCUPADO
+  // VERIFICAR SE HORÁRIO ESTÁ OCUPADO
+  // =========================================================
+  //
+  // Agora usamos:
+  //
+  // hora_inicio
+  // hora_fim
+  //
+  // em vez de:
+  //
+  // hora
+  // blocos
+  // duracao
+  //
   // =========================================================
 
   function horarioEstaOcupado(
     horarioVerificado: string
   ) {
-
-    const DURACAO_BLOCO = 45
-
 
     const minutoVerificado =
       horarioParaMinutos(
@@ -199,7 +203,7 @@ export default function Callendar() {
       agendamento => {
 
         // =====================================================
-        // VERIFICAR DATA
+        // IGNORAR OUTRAS DATAS
         // =====================================================
 
         if (
@@ -213,64 +217,62 @@ export default function Callendar() {
 
 
         // =====================================================
-        // HORÁRIO DE INÍCIO
+        // IGNORAR AGENDAMENTOS CANCELADOS
         // =====================================================
 
-        const inicioAgendamento =
-          horarioParaMinutos(
-            agendamento.hora
-          )
+        if (
+          agendamento.cancelado
+        ) {
 
+          return false
 
-        // =====================================================
-        // BLOCOS OCUPADOS
-        // =====================================================
-
-        const blocosOcupados =
-
-          agendamento.blocos ??
-
-          (
-            agendamento.duracao
-
-              ? Math.ceil(
-                  agendamento.duracao /
-                  DURACAO_BLOCO
-                )
-
-              : 1
-          )
+        }
 
 
         // =====================================================
-        // FINAL DO AGENDAMENTO
+        // INÍCIO
         // =====================================================
 
-        const fimAgendamento =
+const inicioAgendamento =
+    horarioParaMinutos(
+        agendamento.hora_inicio.slice(0, 5)
+    )
 
-          inicioAgendamento +
+        // =====================================================
+        // FIM
+        // =====================================================
 
-          (
-            blocosOcupados *
+const fimAgendamento =
+    horarioParaMinutos(
+        agendamento.hora_fim.slice(0, 5)
+    )
+
+
+    const duracaoAgendamento =
+    fimAgendamento -
+    inicioAgendamento
+
+
+const blocosAgendamento =
+    Math.max(
+        1,
+        Math.ceil(
+            (
+                duracaoAgendamento -
+                TEMPO_TOLERANCIA
+            ) /
             DURACAO_BLOCO
-          )
-
+        )
+    )
 
         // =====================================================
         // VERIFICAR CONFLITO
         // =====================================================
 
-        return (
-
-          minutoVerificado >=
-          inicioAgendamento
-
-          &&
-
-          minutoVerificado <
-          fimAgendamento
-
-        )
+return (
+  minutoVerificado >= inicioAgendamento &&
+  minutoVerificado < fimAgendamento
+)
 
       }
 
@@ -280,12 +282,42 @@ export default function Callendar() {
 
 
   // =========================================================
+  // ADAPTAR AGENDAMENTOS PARA O FORMULÁRIO
+  // =========================================================
+  //
+  // O Formulario ainda está usando o formato antigo:
+  //
+  // hora
+  // nome
+  // telefone
+  //
+  // Portanto fazemos uma adaptação temporária.
+  //
+  // Isso NÃO altera o AgendamentoType.
+  //
+  // =========================================================
+
+const agendamentosFormulario =
+  agendamentos.map(
+    (agendamento) => ({
+      id: agendamento.id,
+      data: agendamento.data,
+      hora: agendamento.hora_inicio,
+      nome: '',
+      telefone: ''
+    })
+  )
+
+
+  // =========================================================
   // ABRIR MODAL QUANDO VEM DO CALENDÁRIO SEMANAL
   // =========================================================
 
   useEffect(() => {
 
-    if (!horarioSelecionado) {
+    if (
+      !horarioSelecionado
+    ) {
 
       return
 
@@ -302,7 +334,9 @@ export default function Callendar() {
       )
 
 
-    if (!horarioExiste) {
+    if (
+      !horarioExiste
+    ) {
 
       return
 
@@ -324,95 +358,71 @@ export default function Callendar() {
   //
   // IMPORTANTE:
   //
-  // A data e o horário usados aqui são exatamente aqueles
-  // enviados pelo Formulario.
+  // Esta função ainda precisa receber:
   //
-  // Isso permite que o cliente:
+  // cliente_id
+  // servicos_id
   //
-  // - altere o horário;
-  // - escolha uma sugestão;
-  // - escolha outro dia;
-  // - escolha o mesmo horário em outro dia.
+  // porque agora essas informações pertencem ao banco.
   //
   // =========================================================
 
-  function agendarHorario(
+  // function agendarHorario(
+  //   nome: string,
+  //   telefone: string,
+  //   data: string,
+  //   horario: string,
+  //   blocos: number,
+  //   duracao: number
+  // ) {
 
-    nome: string,
-
-    telefone: string,
-
-    data: string,
-
-    horario: string,
-
-    blocos: number,
-
-    duracao: number
-
-  ) {
-
-    // =======================================================
-    // CRIAR AGENDAMENTO
-    // =======================================================
-
-    const novoAgendamento = {
-
-      id:
-        crypto.randomUUID(),
-
-      data,
-
-      hora:
-        horario,
-
-      nome,
-
-      telefone,
-
-      blocos,
-
-      duracao
-
-    }
+  //   console.log(
+  //     'Dados recebidos pelo formulário:',
+  //     {
+  //       nome,
+  //       telefone,
+  //       data,
+  //       horario,
+  //       blocos,
+  //       duracao
+  //     }
+  //   )
 
 
-    // =======================================================
-    // SALVAR NO SISTEMA
-    // =======================================================
+  //   /*
+  //     A criação real do agendamento será feita
+  //     depois que o Formulario também passar:
 
-    adicionarAgendamento(
-      novoAgendamento
-    )
+  //     cliente_id
+  //     servicos_id
 
+  //     Exemplo:
 
-    // =======================================================
-    // SALVAR NO HISTÓRICO DO CLIENTE
-    // =======================================================
+  //     const novoAgendamento = {
+  //       cliente_id,
+  //       servicos_id,
+  //       data,
+  //       hora_inicio: horario,
+  //       hora_fim,
+  //       observacoes
+  //     }
 
-    adicionarAgendamentoCliente(
-      novoAgendamento
-    )
-
-
-    // =======================================================
-    // FECHAR MODAL
-    // =======================================================
-
-    setModalAgendamento(
-      false
-    )
+  //     adicionarAgendamento(
+  //       novoAgendamento
+  //     )
+  //   */
 
 
-    // =======================================================
-    // LIMPAR HORÁRIO SELECIONADO
-    // =======================================================
+  //   setModalAgendamento(
+  //     false
+  //   )
 
-    selecionarHorario(
-      null
-    )
 
-  }
+  //   selecionarHorario(
+  //     null
+  //   )
+
+  // }
 
 
   // =========================================================
@@ -454,38 +464,33 @@ export default function Callendar() {
 
   return (
 
-    <div className="
-      w-full
-      h-full
-      bg-[#121212]
-      text-[#E0E0E0]
-      p-4
-    ">
-
-      {/* =====================================================
-          MÊS
-      ====================================================== */}
-
-      {/* <div className="
-        text-center
+    <div
+      className="
+        w-full
+        h-full
+        bg-[#121212]
         text-[#E0E0E0]
-        font-bold
-        text-xl
-        mt-2
-      ">
-
-        {meses[mesVisualizado]}
-
-      </div> */}
+        p-4
+      "
+    >
 
       {/* =====================================================
           CABEÇALHO
       ====================================================== */}
 
-      <div className="
-w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border-b   border-[#2A2A2A]   mb-4   
-      ">
-
+      <div
+        className="
+          w-full
+          h-[80px]
+          bg-[#121212]
+          flex
+          items-center
+          justify-around
+          border-b
+          border-[#2A2A2A]
+          mb-4
+        "
+      >
 
         {/* =================================================
             DIA ANTERIOR
@@ -498,10 +503,8 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
           }
 
           disabled={
-
             dataVisualizada.getTime() ===
             hoje.getTime()
-
           }
 
           className={`
@@ -535,12 +538,14 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
             DATA
         ================================================== */}
 
-        <h1 className="
-          text-[25px]
-          text-[#FFFFFF]
-          text-center
-          font-bold
-        ">
+        <h1
+          className="
+            text-[25px]
+            text-[#FFFFFF]
+            text-center
+            font-bold
+          "
+        >
 
           {diaVisualizado}/
           {mesVisualizado + 1}/
@@ -578,56 +583,34 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
 
         </button>
 
-
       </div>
-
-
-
-
-      {/* =====================================================
-          DIAS DA SEMANA
-      ====================================================== */}
-
-      <div className="
-        flex
-        justify-around
-        px-4
-        mt-4
-        text-[#A0A0A0]
-        text-sm
-         
-      ">
-
-      </div>
-
-
-      {/* =====================================================
-          OPÇÃO (LEGENDA)
-      ====================================================== */}
 
 
       {/* =====================================================
           LISTA DE HORÁRIOS
       ====================================================== */}
 
-      <div className="
-        flex
-        items-center
-        flex-col
-        mt-0
-        pb-[80px]
-        gap-2
-        px-4
-       bg-gradient-to-b from-[#121212] to-[#1E1E1E]
-      ">
-
+      <div
+        className="
+          flex
+          items-center
+          flex-col
+          mt-0
+          pb-[80px]
+          gap-2
+          px-4
+          bg-gradient-to-b
+          from-[#121212]
+          to-[#1E1E1E]
+        "
+      >
 
         {horarios.map(
 
           horario => {
 
             // =================================================
-            // VERIFICAR SE O HORÁRIO ESTÁ OCUPADO
+            // VERIFICAR OCUPAÇÃO
             // =================================================
 
             const ocupado =
@@ -665,7 +648,9 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
                     // IMPEDIR HORÁRIO OCUPADO
                     // =================================================
 
-                    if (ocupado) {
+                    if (
+                      ocupado
+                    ) {
 
                       return
 
@@ -699,23 +684,65 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
                     text-left
                     transition-colors
                     border-2
+
                     ${
                       ocupado
-                        ? 'bg-[#333333] text-[#757575] border-[#333333] cursor-not-allowed'
-                        : 'bg-[#000000] text-[#D3AF37] border-[#D3AF37] hover:bg-[#2A2A2A]'
+
+                        ? `
+                          bg-[#333333]
+                          text-[#757575]
+                          border-[#333333]
+                          cursor-not-allowed
+                        `
+
+                        : `
+                          bg-[#000000]
+                          text-[#D3AF37]
+                          border-[#D3AF37]
+                          hover:bg-[#2A2A2A]
+                        `
                     }
                   `}
 
                 >
 
-                  <div className="flex justify-between items-center">
-                    <span className={ocupado ? '' : 'text-[#D3AF37]'}>{horario.hora}</span>
-                    <span className={`
-                      text-sm
-                      ${ocupado ? 'text-[#757575]' : 'text-[#FFFFFF]'}
-                    `}>
-                      {ocupado ? 'ocupado' : 'livre'}
+                  <div
+                    className="
+                      flex
+                      justify-between
+                      items-center
+                    "
+                  >
+
+                    <span
+                      className={
+                        ocupado
+                          ? ''
+                          : 'text-[#D3AF37]'
+                      }
+                    >
+                      {horario.hora}
                     </span>
+
+
+                    <span
+                      className={`
+                        text-sm
+
+                        ${
+                          ocupado
+                            ? 'text-[#757575]'
+                            : 'text-[#FFFFFF]'
+                        }
+                      `}
+                    >
+                      {
+                        ocupado
+                          ? 'ocupado'
+                          : 'livre'
+                      }
+                    </span>
+
                   </div>
 
                 </button>
@@ -739,48 +766,36 @@ w-full   h-[80px]   bg-[#121212]   flex   items-center   justify-around   border
 
           (
 
-            <Formulario
+<Formulario
 
-              horario={
-                horarioSelecionado
-              }
+  horario={
+    horarioSelecionado
+  }
 
-              data={
-                dataFormatada
-              }
+  data={
+    dataFormatada
+  }
 
-              agendamentos={
-                agendamentos
-              }
+agendamentos={agendamentosFormulario}
 
-              fecharModal={() => {
+  fecharModal={() => {
 
-                setModalAgendamento(
-                  false
-                )
+    setModalAgendamento(false)
 
-                selecionarHorario(
-                  null
-                )
+    selecionarHorario(null)
 
-              }}
+  }}
 
-              agendarHorario={
-                agendarHorario
-              }
-
-            />
+/>
 
           )
-
         }
 
-
       </div>
-
 
     </div>
 
   )
 
 }
+

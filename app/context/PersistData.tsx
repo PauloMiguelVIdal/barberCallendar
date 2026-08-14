@@ -1,12 +1,61 @@
 'use client'
 
 import React, {
-createContext,
-useContext,
-useState,useEffect
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useCallback
 } from 'react'
 
-import { AgendamentoType } from '../types/Agendamento'
+
+import {
+    AgendamentoLocalType
+} from '../types/AgendamentoLocal'
+
+import {
+    AgendamentoComRelacionamentos
+} from '../services/agendamentoService'
+
+
+import {
+    AgendamentoType
+} from '../types/Agendamento'
+
+
+import {
+    CriarAgendamentoType
+} from '../types/CriarAgendamento'
+
+
+import {
+    buscarAgendamentosPorData,
+    buscarAgendamentosPorPeriodo,
+    buscarAgendamentosPorCliente,
+    criarAgendamento,
+    cancelarAgendamento
+} from '../services/agendamentoService'
+
+
+// ======================================================
+// CHAVE ÚNICA DO LOCAL STORAGE
+// ======================================================
+//
+// IMPORTANTE:
+// Não depende de clienteId.
+//
+// O objetivo aqui é simplesmente manter os agendamentos
+// disponíveis para o usuário neste navegador.
+//
+// ======================================================
+
+const CHAVE_AGENDAMENTOS_LOCAL =
+    'brave-boss-agendamentos'
+
+
+const CHAVE_CLIENTE_LOCAL =
+    'brave-boss-cliente-id'
+
 
 // ======================================================
 // TIPOS
@@ -14,162 +63,1244 @@ import { AgendamentoType } from '../types/Agendamento'
 
 type CentralDadosContextType = {
 
-// ====================================================
-// AGENDAMENTOS
-// ====================================================
+    // ====================================================
+    // AGENDAMENTOS DO CALENDÁRIO
+    // ====================================================
 
-agendamentos: AgendamentoType[]
+    agendamentos: AgendamentoType[]
 
 adicionarAgendamento: (
-agendamento: AgendamentoType
-) => void
+    agendamento: CriarAgendamentoType,
+    dadosLocal: Omit<AgendamentoLocalType, 'id'>
+) => Promise<void>
 
-removerAgendamento: (
-id: string
-) => void
+    removerAgendamento: (
+        id: string
+    ) => Promise<void>
 
-// ====================================================
-// AGENDAMENTOS DO CLIENTE
-// ====================================================
 
-agendamentosCliente: AgendamentoType[]
+    carregandoAgendamentosCliente: boolean
 
-adicionarAgendamentoCliente: (
-    agendamento: AgendamentoType
-) => void
+carregarAgendamentosPorPeriodo: (
+        dataInicio: string,
+        dataFim: string
+    ) => Promise<void>
+    // ====================================================
+    // AGENDAMENTOS DO CLIENTE
+    // ====================================================
 
-removerAgendamentoCliente: (
-    id: string
-) => void
+agendamentosCliente:
+    AgendamentoLocalType[]
 
-// ====================================================
-// DATA VISUALIZADA
-// ====================================================
+    adicionarAgendamentoCliente: () => Promise<void>
 
-dataVisualizada: Date
+    removerAgendamentoCliente: (
+        id: string
+    ) => Promise<void>
 
-definirDataVisualizada: (
-data: Date
-) => void
+    carregarAgendamentosCliente: () => Promise<void>
 
-proximoDia: () => void
 
-diaAnterior: () => void
+    // ====================================================
+    // CARREGAMENTO
+    // ====================================================
 
-proximaSemana: () => void
+    carregandoAgendamentos: boolean
 
-semanaAnterior: () => void
 
-proximoMes: () => void
+    // ====================================================
+    // CLIENTE
+    // ====================================================
 
-mesAnterior: () => void
+    clienteId: string | null
 
-// ====================================================
-// DATA DO AGENDAMENTO
-// ====================================================
+    definirClienteId: (
+        id: string | null
+    ) => void
 
-dataAgendamento: string | null
 
-definirDataAgendamento: (
-data: string | null
-) => void
+    // ====================================================
+    // DATA VISUALIZADA
+    // ====================================================
 
-// ====================================================
-// HORÁRIO SELECIONADO
-// ====================================================
+    dataVisualizada: Date
 
-horarioSelecionado: string | null
+    definirDataVisualizada: (
+        data: Date
+    ) => void
 
-selecionarHorario: (
-hora: string | null
-) => void
+    proximoDia: () => void
 
-// ====================================================
-// INTERFACE
-// ====================================================
+    diaAnterior: () => void
 
-interfaceView:
-| 'day'
-| 'week'
-| 'month'
-| 'appointments'
+    proximaSemana: () => void
 
-setInterfaceView: (
-    view:
-    | 'day'
-    | 'week'
-    | 'month'
-    | 'appointments'
-) => void
+    semanaAnterior: () => void
+
+    proximoMes: () => void
+
+    mesAnterior: () => void
+
+
+    // ====================================================
+    // DATA DO AGENDAMENTO
+    // ====================================================
+
+    dataAgendamento: string | null
+
+    definirDataAgendamento: (
+        data: string | null
+    ) => void
+
+
+    // ====================================================
+    // HORÁRIO SELECIONADO
+    // ====================================================
+
+    horarioSelecionado: string | null
+
+    selecionarHorario: (
+        hora: string | null
+    ) => void
+
+
+    // ====================================================
+    // INTERFACE
+    // ====================================================
+
+    interfaceView:
+        | 'day'
+        | 'week'
+        | 'month'
+        | 'appointments'
+
+    setInterfaceView: (
+        view:
+            | 'day'
+            | 'week'
+            | 'month'
+            | 'appointments'
+    ) => void
 
 }
+
 
 // ======================================================
 // CONTEXT
 // ======================================================
 
 const CentralDadosContext =
-createContext<CentralDadosContextType | null>(null)
+    createContext<CentralDadosContextType | null>(null)
+
 
 // ======================================================
 // PROVIDER
 // ======================================================
 
 export function CentralDadosProvider({
-children
+    children
 }: {
-children: React.ReactNode
+    children: React.ReactNode
 }) {
 
-// ====================================================
-// AGENDAMENTOS
-// ====================================================
 
-const [
-agendamentos,
-setAgendamentos
-] = useState<AgendamentoType[]>([])
+    // ====================================================
+    // AGENDAMENTOS
+    // ====================================================
 
-// ====================================================
-// AGENDAMENTOS DO CLIENTE
-// ====================================================
+    const [
+        agendamentos,
+        setAgendamentos
+    ] = useState<AgendamentoType[]>([])
+
+
+    // ====================================================
+    // AGENDAMENTOS DO CLIENTE
+    // ====================================================
 
 const [
     agendamentosCliente,
     setAgendamentosCliente
-] = useState<AgendamentoType[]>([])
+] = useState<
+    AgendamentoLocalType[]
+>([])
 
 
-// ====================================================
-// CARREGAR AGENDAMENTOS DO CLIENTE
-// ====================================================
+    // ====================================================
+    // CONTROLE DE CARREGAMENTO DO CLIENTE
+    // ====================================================
 
-useEffect(() => {
+    const [
+        carregandoAgendamentosCliente,
+        setCarregandoAgendamentosCliente
+    ] = useState(false)
 
-    const dadosSalvos =
-        localStorage.getItem(
-            'brave-boss-agendamentos'
+
+    // ====================================================
+    // CONTROLE DE CARREGAMENTO DO CALENDÁRIO
+    // ====================================================
+
+    const [
+        carregandoAgendamentos,
+        setCarregandoAgendamentos
+    ] = useState(false)
+
+
+    // ====================================================
+    // CONTROLE DO LOCAL STORAGE
+    // ====================================================
+
+    const [
+        localStorageCarregado,
+        setLocalStorageCarregado
+    ] = useState(false)
+
+
+    // ====================================================
+    // CLIENTE
+    // ====================================================
+
+    const [
+        clienteId,
+        setClienteId
+    ] = useState<string | null>(null)
+
+
+    // ====================================================
+    // CARREGAR DADOS DO LOCAL STORAGE
+    // ====================================================
+
+    useEffect(() => {
+
+        if (
+            typeof window === 'undefined'
+        ) {
+
+            return
+
+        }
+
+
+        // ------------------------------------------------
+        // CARREGAR CLIENTE
+        // ------------------------------------------------
+
+        try {
+
+            const clienteSalvo =
+                localStorage.getItem(
+                    CHAVE_CLIENTE_LOCAL
+                )
+
+
+            if (clienteSalvo) {
+
+                setClienteId(
+                    clienteSalvo
+                )
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao carregar cliente do localStorage:',
+                error
+            )
+
+        }
+
+
+        // ------------------------------------------------
+        // CARREGAR AGENDAMENTOS
+        // ------------------------------------------------
+
+        try {
+
+            const dadosSalvos =
+                localStorage.getItem(
+                    CHAVE_AGENDAMENTOS_LOCAL
+                )
+
+
+            if (!dadosSalvos) {
+
+                setAgendamentosCliente([])
+
+                setLocalStorageCarregado(true)
+
+                return
+
+            }
+
+
+            const dados =
+                JSON.parse(
+                    dadosSalvos
+                )
+
+
+            if (
+                Array.isArray(dados)
+            ) {
+
+                setAgendamentosCliente(
+                    dados
+                )
+
+            } else {
+
+                setAgendamentosCliente([])
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao carregar agendamentos do localStorage:',
+                error
+            )
+
+            setAgendamentosCliente([])
+
+        } finally {
+
+            setLocalStorageCarregado(true)
+
+        }
+
+    }, [])
+
+
+    // ====================================================
+    // SALVAR AGENDAMENTOS NO LOCAL STORAGE
+    // ====================================================
+    //
+    // Esse efeito é a principal garantia de persistência
+    // local.
+    //
+    // Sempre que agendamentosCliente mudar, o conteúdo
+    // inteiro é salvo novamente.
+    //
+    // ====================================================
+
+    useEffect(() => {
+
+        if (
+            typeof window === 'undefined'
+        ) {
+
+            return
+
+        }
+
+
+        // ------------------------------------------------
+        // MUITO IMPORTANTE
+        //
+        // Não salvar antes de terminar o carregamento
+        // inicial.
+        //
+        // Isso evita:
+        //
+        // localStorage possui dados
+        //        ↓
+        // React inicia com []
+        //        ↓
+        // useEffect salva []
+        //        ↓
+        // dados antigos são apagados
+        //
+        // ------------------------------------------------
+
+        if (
+            !localStorageCarregado
+        ) {
+
+            return
+
+        }
+
+
+        try {
+
+            localStorage.setItem(
+                CHAVE_AGENDAMENTOS_LOCAL,
+                JSON.stringify(
+                    agendamentosCliente
+                )
+            )
+
+
+            console.log(
+                '[LOCAL STORAGE] Agendamentos salvos:',
+                agendamentosCliente
+            )
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao salvar agendamentos no localStorage:',
+                error
+            )
+
+        }
+
+    }, [
+        agendamentosCliente,
+        localStorageCarregado
+    ])
+
+
+    // ====================================================
+    // DEFINIR CLIENTE
+    // ====================================================
+
+    function definirClienteId(
+        id: string | null
+    ) {
+
+        setClienteId(id)
+
+
+        try {
+
+            if (id) {
+
+                localStorage.setItem(
+                    CHAVE_CLIENTE_LOCAL,
+                    id
+                )
+
+            } else {
+
+                localStorage.removeItem(
+                    CHAVE_CLIENTE_LOCAL
+                )
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao salvar cliente no localStorage:',
+                error
+            )
+
+        }
+
+    }
+
+
+    // ====================================================
+    // FORMATAR DATA PARA BANCO
+    // ====================================================
+
+    const formatarDataBanco = useCallback(
+        (data: Date) => {
+
+            const ano =
+                data.getFullYear()
+
+
+            const mes =
+                String(
+                    data.getMonth() + 1
+                ).padStart(
+                    2,
+                    '0'
+                )
+
+
+            const dia =
+                String(
+                    data.getDate()
+                ).padStart(
+                    2,
+                    '0'
+                )
+
+
+            return `${ano}-${mes}-${dia}`
+
+        },
+        []
+    )
+
+
+    // ====================================================
+    // BUSCAR AGENDAMENTOS POR DATA
+    // ====================================================
+
+    const carregarAgendamentosPorData =
+        useCallback(
+            async (
+                data: string
+            ) => {
+
+                setCarregandoAgendamentos(
+                    true
+                )
+
+
+                try {
+
+                    const dados =
+                        await buscarAgendamentosPorData(
+                            data
+                        )
+
+
+                    setAgendamentos(
+                        dados
+                    )
+
+
+                } catch (error) {
+
+                    console.error(
+                        'Erro ao carregar agendamentos:',
+                        error
+                    )
+
+                } finally {
+
+                    setCarregandoAgendamentos(
+                        false
+                    )
+
+                }
+
+            },
+            []
         )
 
 
-    if (!dadosSalvos) {
+    // ====================================================
+    // BUSCAR AGENDAMENTOS DO SUPABASE
+    // ====================================================
+    //
+    // IMPORTANTE:
+    //
+    // O Supabase NÃO substitui simplesmente o localStorage.
+    //
+    // Fazemos um MERGE.
+    //
+    // Assim, se existir um agendamento local que ainda não
+    // apareceu na resposta do Supabase, ele continua na
+    // interface.
+    //
+    // ====================================================
+
+// ====================================================
+// BUSCAR AGENDAMENTOS POR PERÍODO (SEMANA)
+// ====================================================
+
+const carregarAgendamentosPorPeriodo =
+    useCallback(
+        async (
+            dataInicio: string,
+            dataFim: string
+        ) => {
+
+            setCarregandoAgendamentos(
+                true
+            )
+
+            try {
+
+                const dados =
+                    await buscarAgendamentosPorPeriodo(
+                        dataInicio,
+                        dataFim
+                    )
+
+                setAgendamentos(
+                    dados
+                )
+
+            } catch (error) {
+
+                console.error(
+                    'Erro ao carregar agendamentos do período:',
+                    error
+                )
+
+            } finally {
+
+                setCarregandoAgendamentos(
+                    false
+                )
+
+            }
+
+        },
+        []
+    )
+
+
+
+const carregarAgendamentosCliente =
+    useCallback(
+        async () => {
+
+            if (!clienteId) {
+
+                return
+
+            }
+
+
+            setCarregandoAgendamentosCliente(
+                true
+            )
+
+
+            try {
+
+                const dados =
+                    await buscarAgendamentosPorCliente(
+                        clienteId
+                    )
+
+
+                setAgendamentosCliente(
+                    dadosLocais => {
+
+                        const mapa =
+                            new Map<
+                                string,
+                                AgendamentoLocalType
+                            >()
+
+
+                        // =========================================
+                        // 1. DADOS VINDOS DO SUPABASE
+                        // =========================================
+
+dados.forEach(
+    agendamento => {
+
+        // =====================================================
+        // CLIENTE
+        // =====================================================
+
+        const cliente =
+            agendamento.clientes?.[0]
+
+
+        // =====================================================
+        // SERVIÇOS
+        // =====================================================
+
+        const servicos =
+            agendamento.agendamento_servicos
+                ?.flatMap(
+                    item =>
+                        item.servicos ?? []
+                )
+                ?? []
+
+
+        // =====================================================
+        // DURAÇÃO TOTAL
+        // =====================================================
+
+        const duracao =
+            servicos.reduce(
+                (
+                    total,
+                    servico
+                ) =>
+                    total +
+                    Number(
+                        servico.duracao
+                    ),
+                0
+            )
+
+
+        // =====================================================
+        // VALOR TOTAL
+        // =====================================================
+
+        const valor =
+            servicos.reduce(
+                (
+                    total,
+                    servico
+                ) =>
+                    total +
+                    Number(
+                        servico.valor
+                    ),
+                0
+            )
+
+
+        // =====================================================
+        // BLOCOS
+        // =====================================================
+
+        const blocos =
+            Math.ceil(
+                duracao / 45
+            )
+
+
+        // =====================================================
+        // CONVERTER PARA O FORMATO LOCAL
+        // =====================================================
+
+        const agendamentoLocal:
+            AgendamentoLocalType = {
+
+            id:
+                agendamento.id,
+
+            data:
+                agendamento.data,
+
+            hora:
+                agendamento.hora_inicio,
+
+            hora_fim:
+                agendamento.hora_fim,
+
+            nome:
+                cliente?.nome
+                ?? '',
+
+            telefone:
+                cliente?.telefone
+                ?? '',
+
+            servicos:
+                servicos.map(
+                    servico => ({
+
+                        id:
+                            servico.id,
+
+                        nome:
+                            servico.nome,
+
+                        duracao:
+                            Number(
+                                servico.duracao
+                            ),
+
+                        valor:
+                            Number(
+                                servico.valor
+                            )
+
+                    })
+                ),
+
+            duracao,
+
+            valor,
+
+            blocos,
+
+            cancelado:
+                agendamento.cancelado
+
+        }
+
+
+        // =====================================================
+        // ADICIONAR AO MAPA
+        // =====================================================
+
+        mapa.set(
+            agendamento.id,
+            agendamentoLocal
+        )
+
+    }
+)
+
+                        // =========================================
+                        // 2. PRESERVAR DADOS LOCAIS
+                        // =========================================
+
+                        dadosLocais.forEach(
+                            agendamento => {
+
+                                if (
+                                    !mapa.has(
+                                        agendamento.id
+                                    )
+                                ) {
+
+                                    mapa.set(
+                                        agendamento.id,
+                                        agendamento
+                                    )
+
+                                }
+
+                            }
+                        )
+
+
+                        // =========================================
+                        // 3. RETORNAR MERGE
+                        // =========================================
+
+                        return Array.from(
+                            mapa.values()
+                        )
+
+                    }
+                )
+
+            } catch (error) {
+
+                console.error(
+                    'Erro ao carregar agendamentos do cliente:',
+                    error
+                )
+
+            } finally {
+
+                setCarregandoAgendamentosCliente(
+                    false
+                )
+
+            }
+
+        },
+        [
+            clienteId
+        ]
+    )
+    // ====================================================
+    // ADICIONAR AGENDAMENTO
+    // ====================================================
+
+async function adicionarAgendamento(
+    novoAgendamento: CriarAgendamentoType,
+    dadosLocal: Omit<AgendamentoLocalType, 'id'>
+) {
+
+    try {
+
+        // ==================================================
+        // 1. SALVAR NO SUPABASE
+        // ==================================================
+
+        const agendamentoCriado =
+            await criarAgendamento(
+                novoAgendamento
+            )
+
+
+        // ==================================================
+        // 2. ATUALIZAR CALENDÁRIO
+        // ==================================================
+
+        const dataAtual =
+            formatarDataBanco(
+                dataVisualizada
+            )
+
+
+        if (
+            agendamentoCriado.data ===
+            dataAtual
+        ) {
+
+            setAgendamentos(
+                prev => {
+
+                    const jaExiste =
+                        prev.some(
+                            agendamento =>
+                                agendamento.id ===
+                                agendamentoCriado.id
+                        )
+
+
+                    if (jaExiste) {
+
+                        return prev
+
+                    }
+
+
+                    return [
+                        ...prev,
+                        agendamentoCriado
+                    ]
+
+                }
+            )
+
+        }
+
+
+        // ==================================================
+        // 3. CRIAR REGISTRO PARA O LOCAL STORAGE
+        // ==================================================
+
+        const novoAgendamentoLocal:
+            AgendamentoLocalType = {
+
+            ...dadosLocal,
+
+            id:
+                agendamentoCriado.id
+
+        }
+
+
+        // ==================================================
+        // 4. SALVAR NO LOCAL STORAGE
+        // ==================================================
+
+        setAgendamentosCliente(
+            prev => {
+
+                const jaExiste =
+                    prev.some(
+                        agendamento =>
+                            agendamento.id ===
+                            novoAgendamentoLocal.id
+                    )
+
+
+                if (jaExiste) {
+
+                    return prev
+
+                }
+
+
+                return [
+                    ...prev,
+                    novoAgendamentoLocal
+                ]
+
+            }
+        )
+
+
+    } catch (error) {
+
+        console.error(
+            'Erro ao adicionar agendamento:',
+            error
+        )
+
+        throw error
+
+    }
+
+}
+
+    // ====================================================
+    // REMOVER / CANCELAR AGENDAMENTO
+    // ====================================================
+
+    async function removerAgendamento(
+        id: string
+    ) {
+
+        try {
+
+            // ------------------------------------------------
+            // 1. CANCELAR NO SUPABASE
+            // ------------------------------------------------
+
+            await cancelarAgendamento(
+                id
+            )
+
+
+            // ------------------------------------------------
+            // 2. REMOVER DO CALENDÁRIO
+            // ------------------------------------------------
+
+            setAgendamentos(
+                prev =>
+                    prev.filter(
+                        agendamento =>
+                            agendamento.id !== id
+                    )
+            )
+
+
+            // ------------------------------------------------
+            // 3. REMOVER DO LOCAL STORAGE
+            // ------------------------------------------------
+
+            setAgendamentosCliente(
+                prev =>
+                    prev.filter(
+                        agendamento =>
+                            agendamento.id !== id
+                    )
+            )
+
+
+            console.log(
+                '[AGENDAMENTO] Removido:',
+                id
+            )
+
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao cancelar agendamento:',
+                error
+            )
+
+            throw error
+
+        }
+
+    }
+
+
+    // ====================================================
+    // ADICIONAR AGENDAMENTO DO CLIENTE
+    // ====================================================
+
+    async function adicionarAgendamentoCliente() {
+
+        await carregarAgendamentosCliente()
+
+    }
+
+
+    // ====================================================
+    // REMOVER AGENDAMENTO DO CLIENTE
+    // ====================================================
+
+    async function removerAgendamentoCliente(
+        id: string
+    ) {
+
+        try {
+
+            await cancelarAgendamento(
+                id
+            )
+
+
+            // ----------------------------------------------
+            // REMOVER DO ESTADO
+            // ----------------------------------------------
+
+            setAgendamentosCliente(
+                prev =>
+                    prev.filter(
+                        agendamento =>
+                            agendamento.id !== id
+                    )
+            )
+
+
+            // ----------------------------------------------
+            // REMOVER DO CALENDÁRIO
+            // ----------------------------------------------
+
+            setAgendamentos(
+                prev =>
+                    prev.filter(
+                        agendamento =>
+                            agendamento.id !== id
+                    )
+            )
+
+
+            console.log(
+                '[AGENDAMENTO CLIENTE] Removido:',
+                id
+            )
+
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao cancelar agendamento do cliente:',
+                error
+            )
+
+            throw error
+
+        }
+
+    }
+
+
+    // ====================================================
+    // DATA VISUALIZADA
+    // ====================================================
+
+    const [
+        dataVisualizada,
+        setDataVisualizada
+    ] = useState<Date>(
+        () => {
+
+            const hoje =
+                new Date()
+
+
+            hoje.setHours(
+                0,
+                0,
+                0,
+                0
+            )
+
+
+            return hoje
+
+        }
+    )
+
+function salvarAgendamentosClienteLocal(
+    agendamentos:
+        AgendamentoLocalType[]
+) {
+
+    if (
+        typeof window === 'undefined'
+    ) {
 
         return
 
     }
 
+    try {
+
+        localStorage.setItem(
+            CHAVE_AGENDAMENTOS_LOCAL,
+            JSON.stringify(
+                agendamentos
+            )
+        )
+
+    } catch (error) {
+
+        console.error(
+            'Erro ao salvar agendamentos no localStorage:',
+            error
+        )
+
+    }
+
+}
+
+
+function carregarAgendamentosClienteLocal():
+    AgendamentoLocalType[] {
+
+    if (
+        typeof window === 'undefined'
+    ) {
+
+        return []
+
+    }
 
     try {
 
-        const agendamentosSalvos:
-            AgendamentoType[] =
-            JSON.parse(dadosSalvos)
+        const dadosSalvos =
+            localStorage.getItem(
+                CHAVE_AGENDAMENTOS_LOCAL
+            )
 
 
-        const hoje =
-            new Date()
+        if (!dadosSalvos) {
 
-        hoje.setHours(
+            return []
+
+        }
+
+
+        const dados =
+            JSON.parse(
+                dadosSalvos
+            )
+
+
+        if (
+            !Array.isArray(dados)
+        ) {
+
+            return []
+
+        }
+
+
+        return dados as AgendamentoLocalType[]
+
+    } catch (error) {
+
+        console.error(
+            'Erro ao carregar agendamentos do localStorage:',
+            error
+        )
+
+        return []
+
+    }
+
+}
+
+useEffect(() => {
+
+    const agendamentosLocais =
+        carregarAgendamentosClienteLocal()
+
+
+    setAgendamentosCliente(
+        agendamentosLocais
+    )
+
+    setLocalStorageCarregado(
+        true
+    )
+
+}, [])
+
+
+useEffect(() => {
+
+    if (!localStorageCarregado) {
+
+        return
+
+    }
+
+    salvarAgendamentosClienteLocal(
+        agendamentosCliente
+    )
+
+}, [
+    agendamentosCliente,
+    localStorageCarregado
+])
+    // ====================================================
+    // DEFINIR DATA VISUALIZADA
+    // ====================================================
+
+    function definirDataVisualizada(
+        data: Date
+    ) {
+
+        const novaData =
+            new Date(data)
+
+
+        novaData.setHours(
             0,
             0,
             0,
@@ -177,485 +1308,360 @@ useEffect(() => {
         )
 
 
-        const agendamentosValidos =
-            agendamentosSalvos.filter(
-                agendamento => {
-
-                    const [
-                        ano,
-                        mes,
-                        dia
-                    ] = agendamento.data
-                        .split('-')
-                        .map(Number)
-
-
-                    const dataAgendamento =
-                        new Date(
-                            ano,
-                            mes - 1,
-                            dia
-                        )
-
-
-                    dataAgendamento.setHours(
-                        0,
-                        0,
-                        0,
-                        0
-                    )
-
-
-                    return (
-                        dataAgendamento >= hoje
-                    )
-
-                }
-            )
-
-
-        setAgendamentosCliente(
-            agendamentosValidos
-        )
-
-
-        localStorage.setItem(
-
-            'brave-boss-agendamentos',
-
-            JSON.stringify(
-                agendamentosValidos
-            )
-
-        )
-
-    } catch {
-
-        localStorage.removeItem(
-            'brave-boss-agendamentos'
+        setDataVisualizada(
+            novaData
         )
 
     }
 
-}, [])
 
-function adicionarAgendamento(
-novoAgendamento: AgendamentoType
-) {
-
-setAgendamentos(
-  prev => [
-    ...prev,
-    novoAgendamento
-  ]
-)
-
-}
+    // ====================================================
+    // CARREGAR AGENDAMENTOS QUANDO DATA MUDA
+    // ====================================================
 
 
-function removerAgendamento(
-id: string
-) {
+    // ====================================================
+    // NAVEGAÇÃO POR DIA
+    // ====================================================
 
-setAgendamentos(
-  prev =>
-    prev.filter(
-      agendamento =>
-        agendamento.id !== id
-    )
-)
+    function proximoDia() {
 
-}
+        setDataVisualizada(
+            prev => {
 
-// ====================================================
-// ADICIONAR AGENDAMENTO DO CLIENTE
-// ====================================================
-
-function adicionarAgendamentoCliente(
-    novoAgendamento: AgendamentoType
-) {
-
-    setAgendamentosCliente(
-        prev => {
-
-            const novosAgendamentos = [
-
-                ...prev,
-
-                novoAgendamento
-
-            ]
+                const novaData =
+                    new Date(prev)
 
 
-            localStorage.setItem(
-
-                'brave-boss-agendamentos',
-
-                JSON.stringify(
-                    novosAgendamentos
-                )
-
-            )
-
-
-            return novosAgendamentos
-
-        }
-    )
-
-}
-
-
-// ====================================================
-// REMOVER AGENDAMENTO DO CLIENTE
-// ====================================================
-
-function removerAgendamentoCliente(
-    id: string
-) {
-
-    setAgendamentosCliente(
-        prev => {
-
-            const novosAgendamentos =
-                prev.filter(
-                    agendamento =>
-                        agendamento.id !== id
+                novaData.setDate(
+                    novaData.getDate() + 1
                 )
 
 
-            localStorage.setItem(
+                return novaData
 
-                'brave-boss-agendamentos',
+            }
+        )
 
-                JSON.stringify(
-                    novosAgendamentos
+    }
+
+
+    function diaAnterior() {
+
+        setDataVisualizada(
+            prev => {
+
+                const novaData =
+                    new Date(prev)
+
+
+                novaData.setDate(
+                    novaData.getDate() - 1
                 )
 
-            )
 
+                return novaData
 
-            return novosAgendamentos
+            }
+        )
 
-        }
-    )
+    }
 
-}
 
-// ====================================================
-// DATA VISUALIZADA
-// ====================================================
+    // ====================================================
+    // NAVEGAÇÃO POR SEMANA
+    // ====================================================
 
-const [
-dataVisualizada,
-setDataVisualizada
-] = useState<Date>(
-() => {
+    function proximaSemana() {
 
-  const hoje = new Date()
+        setDataVisualizada(
+            prev => {
 
-  hoje.setHours(
-    0,
-    0,
-    0,
-    0
-  )
+                const novaData =
+                    new Date(prev)
 
-  return hoje
 
-}
+                novaData.setDate(
+                    novaData.getDate() + 7
+                )
 
-)
 
-// ====================================================
-// DEFINIR DATA VISUALIZADA
-// ====================================================
+                return novaData
 
-function definirDataVisualizada(
-data: Date
-) {
+            }
+        )
 
-const novaData =
-  new Date(data)
+    }
 
-novaData.setHours(
-  0,
-  0,
-  0,
-  0
-)
 
-setDataVisualizada(
-  novaData
-)
+    function semanaAnterior() {
 
-}
+        setDataVisualizada(
+            prev => {
 
-// ====================================================
-// NAVEGAÇÃO POR DIA
-// ====================================================
+                const novaData =
+                    new Date(prev)
 
-function proximoDia() {
 
-setDataVisualizada(
-  prev => {
+                novaData.setDate(
+                    novaData.getDate() - 7
+                )
 
-    const novaData =
-      new Date(prev)
 
-    novaData.setDate(
-      novaData.getDate() + 1
-    )
+                return novaData
 
-    return novaData
+            }
+        )
 
-  }
-)
+    }
 
-}
 
-function diaAnterior() {
+    // ====================================================
+    // NAVEGAÇÃO POR MÊS
+    // ====================================================
 
-setDataVisualizada(
-  prev => {
+    function proximoMes() {
 
-    const novaData =
-      new Date(prev)
+        setDataVisualizada(
+            prev => {
 
-    novaData.setDate(
-      novaData.getDate() - 1
-    )
+                const novaData =
+                    new Date(prev)
 
-    return novaData
 
-  }
-)
+                novaData.setMonth(
+                    novaData.getMonth() + 1
+                )
 
-}
 
-// ====================================================
-// NAVEGAÇÃO POR SEMANA
-// ====================================================
+                return novaData
 
-function proximaSemana() {
+            }
+        )
 
-setDataVisualizada(
-  prev => {
+    }
 
-    const novaData =
-      new Date(prev)
 
-    novaData.setDate(
-      novaData.getDate() + 7
-    )
+    function mesAnterior() {
 
-    return novaData
+        setDataVisualizada(
+            prev => {
 
-  }
-)
+                const novaData =
+                    new Date(prev)
 
-}
 
-function semanaAnterior() {
+                novaData.setMonth(
+                    novaData.getMonth() - 1
+                )
 
-setDataVisualizada(
-  prev => {
 
-    const novaData =
-      new Date(prev)
+                return novaData
 
-    novaData.setDate(
-      novaData.getDate() - 7
-    )
+            }
+        )
 
-    return novaData
+    }
 
-  }
-)
 
-}
-
-// ====================================================
-// NAVEGAÇÃO POR MÊS
-// ====================================================
-
-function proximoMes() {
-
-setDataVisualizada(
-  prev => {
-
-    const novaData =
-      new Date(prev)
-
-    novaData.setMonth(
-      novaData.getMonth() + 1
-    )
-
-    return novaData
-
-  }
-)
-
-}
-
-function mesAnterior() {
-
-setDataVisualizada(
-  prev => {
-
-    const novaData =
-      new Date(prev)
-
-    novaData.setMonth(
-      novaData.getMonth() - 1
-    )
-
-    return novaData
-
-  }
-)
-
-}
-
-// ====================================================
-// DATA DO AGENDAMENTO
-// ====================================================
-
-const [
-dataAgendamento,
-setDataAgendamento
-] = useState<string | null>(null)
-
-function definirDataAgendamento(
-data: string | null
-) {
-
-setDataAgendamento(
-  data
-)
-
-}
-
-// ====================================================
-// HORÁRIO SELECIONADO
-// ====================================================
-
-const [
-horarioSelecionado,
-setHorarioSelecionado
-] = useState<string | null>(null)
-
-function selecionarHorario(
-hora: string | null
-) {
-
-setHorarioSelecionado(
-  hora
-)
-
-}
-
-// ====================================================
-// INTERFACE
-// ====================================================
-
-const [
-    interfaceView,
-    setInterfaceView
-] = useState<
-    'day'
-    | 'week'
-    | 'month'
-    | 'appointments'
->('day')
-
-// ====================================================
-// PROVIDER
-// ====================================================
-
-return (
-
-<CentralDadosContext.Provider
-  value={{
-
-    // =================================================
-    // AGENDAMENTOS
-    // =================================================
-
-    agendamentos,
-
-    adicionarAgendamento,
-
-    removerAgendamento,
-
-// =================================================
-// AGENDAMENTOS DO CLIENTE
-// =================================================
-
-agendamentosCliente,
-
-adicionarAgendamentoCliente,
-
-removerAgendamentoCliente,
-
-
-    // =================================================
-    // DATA VISUALIZADA
-    // =================================================
-
-    dataVisualizada,
-
-    definirDataVisualizada,
-
-    proximoDia,
-
-    diaAnterior,
-
-    proximaSemana,
-
-    semanaAnterior,
-
-    proximoMes,
-
-    mesAnterior,
-
-
-    // =================================================
+    // ====================================================
     // DATA DO AGENDAMENTO
-    // =================================================
+    // ====================================================
 
-    dataAgendamento,
-
-    definirDataAgendamento,
-
-
-    // =================================================
-    // HORÁRIO
-    // =================================================
-
-    horarioSelecionado,
-
-    selecionarHorario,
+    const [
+        dataAgendamento,
+        setDataAgendamento
+    ] = useState<string | null>(null)
 
 
-    // =================================================
+    function definirDataAgendamento(
+        data: string | null
+    ) {
+
+        setDataAgendamento(
+            data
+        )
+
+    }
+
+
+    // ====================================================
+    // HORÁRIO SELECIONADO
+    // ====================================================
+
+    const [
+        horarioSelecionado,
+        setHorarioSelecionado
+    ] = useState<string | null>(null)
+
+
+    function selecionarHorario(
+        hora: string | null
+    ) {
+
+        setHorarioSelecionado(
+            hora
+        )
+
+    }
+
+
+    // ====================================================
     // INTERFACE
-    // =================================================
+    // ====================================================
 
-    interfaceView,
+    const [
+        interfaceView,
+        setInterfaceView
+    ] = useState<
+        | 'day'
+        | 'week'
+        | 'month'
+        | 'appointments'
+    >(
+        'day'
+    )
 
-    setInterfaceView
+useEffect(() => {
 
-  }}
->
+    // ------------------------------------------------
+    // Na visão de semana, quem controla a busca é o
+    // próprio CallendarWeek (via carregarAgendamentosPorPeriodo)
+    // ------------------------------------------------
 
-  {children}
+    if (
+        interfaceView === 'week'
+    ) {
 
-</CentralDadosContext.Provider>
+        return
 
-)
+    }
+
+    const data =
+        formatarDataBanco(
+            dataVisualizada
+        )
+
+    void carregarAgendamentosPorData(
+        data
+    )
+
+}, [
+    dataVisualizada,
+    interfaceView,              
+    carregarAgendamentosPorData,
+    formatarDataBanco
+])
+
+    // ====================================================
+    // PROVIDER
+    // ====================================================
+
+    return (
+
+        <CentralDadosContext.Provider
+            value={{
+
+                // =========================================
+                // AGENDAMENTOS
+                // =========================================
+
+                agendamentos,
+
+                adicionarAgendamento,
+
+                removerAgendamento,
+
+                carregandoAgendamentosCliente,
+
+
+                // =========================================
+                // AGENDAMENTOS DO CLIENTE
+                // =========================================
+
+                agendamentosCliente,
+carregarAgendamentosPorPeriodo,
+                adicionarAgendamentoCliente,
+
+                removerAgendamentoCliente,
+
+                carregarAgendamentosCliente,
+
+
+                // =========================================
+                // CARREGAMENTO
+                // =========================================
+
+                carregandoAgendamentos,
+
+
+                // =========================================
+                // CLIENTE
+                // =========================================
+
+                clienteId,
+
+                definirClienteId,
+
+
+                // =========================================
+                // DATA VISUALIZADA
+                // =========================================
+
+                dataVisualizada,
+
+                definirDataVisualizada,
+
+                proximoDia,
+
+                diaAnterior,
+
+                proximaSemana,
+
+                semanaAnterior,
+
+                proximoMes,
+
+                mesAnterior,
+
+
+                // =========================================
+                // DATA DO AGENDAMENTO
+                // =========================================
+
+                dataAgendamento,
+
+                definirDataAgendamento,
+
+
+                // =========================================
+                // HORÁRIO
+                // =========================================
+
+                horarioSelecionado,
+
+                selecionarHorario,
+
+
+                // =========================================
+                // INTERFACE
+                // =========================================
+
+                interfaceView,
+
+                setInterfaceView
+
+            }}
+        >
+
+            {children}
+
+        </CentralDadosContext.Provider>
+
+    )
 
 }
+
 
 // ======================================================
 // HOOK PRINCIPAL
@@ -663,22 +1669,25 @@ removerAgendamentoCliente,
 
 export function useCentralDados() {
 
-const context =
-useContext(
-CentralDadosContext
-)
+    const context =
+        useContext(
+            CentralDadosContext
+        )
 
-if (!context) {
 
-throw new Error(
-  'useCentralDados deve ser usado dentro do CentralDadosProvider'
-)
+    if (!context) {
+
+        throw new Error(
+            'useCentralDados deve ser usado dentro do CentralDadosProvider'
+        )
+
+    }
+
+
+    return context
 
 }
 
-return context
-
-}
 
 // ======================================================
 // HOOK DE AGENDAMENTOS
@@ -701,7 +1710,9 @@ export function useAgendamentos() {
         removerAgendamento:
             context.removerAgendamento,
 
-
+      carregarAgendamentosPorPeriodo:   
+            context.carregarAgendamentosPorPeriodo,
+            
         agendamentosCliente:
             context.agendamentosCliente,
 
@@ -709,7 +1720,13 @@ export function useAgendamentos() {
             context.adicionarAgendamentoCliente,
 
         removerAgendamentoCliente:
-            context.removerAgendamentoCliente
+            context.removerAgendamentoCliente,
+
+        carregarAgendamentosCliente:
+            context.carregarAgendamentosCliente,
+
+        carregandoAgendamentos:
+            context.carregandoAgendamentos
 
     }
 

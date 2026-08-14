@@ -1,7 +1,13 @@
 'use client'
-import { useState } from 'react'
 
-import { AgendamentoType } from '../types/Agendamento'
+import {
+    useState
+} from 'react'
+
+import {
+    AgendamentoComRelacionamentos
+} from '../services/agendamentoService'
+
 import {
     CalendarCheck,
     Clock,
@@ -9,7 +15,8 @@ import {
     UserRound,
     Phone,
     ArrowLeft,
-    X
+    X,
+    Loader2
 } from 'lucide-react'
 
 import {
@@ -17,30 +24,84 @@ import {
 } from '../context/PersistData'
 
 
+// =========================================================
+// TIPO DOS AGENDAMENTOS EXIBIDOS
+// =========================================================
+
+type AgendamentoExibicao = {
+    id: string
+
+    data: string
+
+    hora: string
+
+    hora_fim: string
+
+    nome: string
+
+    telefone: string
+
+    duracao: number
+
+    valor: number
+
+    blocos?: number
+
+    cancelado: boolean
+
+    servicos: {
+        id: string
+        nome: string
+        duracao: number
+        valor: number
+    }[]
+}
+
+
+// =========================================================
+// COMPONENTE
+// =========================================================
+
 export default function Appointments() {
+
 
     // =========================================================
     // CONTEXT
     // =========================================================
 
+    const {
 
-const {
-    agendamentosCliente,
-    removerAgendamento,
-    removerAgendamentoCliente,
-    setInterfaceView
-} = useCentralDados()
+        agendamentosCliente,
 
-const [
-    modalCancelar,
-    setModalCancelar
-] = useState(false)
+        carregandoAgendamentosCliente,
 
-const [
-    agendamentoSelecionado,
-    setAgendamentoSelecionado
-] = useState<AgendamentoType | null>(null)
+        removerAgendamento,
 
+        setInterfaceView
+
+    } = useCentralDados()
+
+
+    // =========================================================
+    // MODAL
+    // =========================================================
+
+    const [
+
+        modalCancelar,
+
+        setModalCancelar
+
+    ] = useState(false)
+
+
+    const [
+
+        agendamentoSelecionado,
+
+        setAgendamentoSelecionado
+
+    ] = useState<AgendamentoExibicao | null>(null)
 
 
     // =========================================================
@@ -51,10 +112,18 @@ const [
         data: string
     ) {
 
+        if (!data) {
+
+            return '--/--/----'
+
+        }
+
         const [
+
             ano,
             mes,
             dia
+
         ] = data.split('-')
 
 
@@ -62,70 +131,247 @@ const [
 
     }
 
-function abrirCancelar(
-    agendamento: AgendamentoType
-) {
 
-    setAgendamentoSelecionado(
-        agendamento
-    )
+    // =========================================================
+    // FORMATAR HORÁRIO
+    // =========================================================
 
-    setModalCancelar(
-        true
-    )
+    function formatarHorario(
+        horario: string
+    ) {
 
-}
+        if (!horario) {
 
-function cancelarAgendamento() {
+            return '--:--'
 
-    if (!agendamentoSelecionado) {
+        }
 
-        return
+
+        return horario.slice(
+            0,
+            5
+        )
 
     }
 
-    removerAgendamento(
-        agendamentoSelecionado.id
-    )
 
-    removerAgendamentoCliente(
-        agendamentoSelecionado.id
-    )
+    // =========================================================
+    // ABRIR CANCELAMENTO
+    // =========================================================
 
-    setModalCancelar(
-        false
-    )
+    function abrirCancelar(
+        agendamento: AgendamentoExibicao
+    ) {
 
-    setAgendamentoSelecionado(
-        null
-    )
+        setAgendamentoSelecionado(
+            agendamento
+        )
 
-}
+        setModalCancelar(
+            true
+        )
+
+    }
+
+
+    // =========================================================
+    // CANCELAR AGENDAMENTO
+    // =========================================================
+
+    async function cancelarAgendamento() {
+
+        if (!agendamentoSelecionado) {
+
+            return
+
+        }
+
+
+        const id =
+            agendamentoSelecionado.id
+
+
+        try {
+
+            await removerAgendamento(
+                id
+            )
+
+
+            setModalCancelar(
+                false
+            )
+
+
+            setAgendamentoSelecionado(
+                null
+            )
+
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao cancelar agendamento:',
+                error
+            )
+
+        }
+
+    }
+
+
+    // =========================================================
+    // CONVERTER DADOS PARA EXIBIÇÃO
+    // =========================================================
+
+    const agendamentosExibicao: AgendamentoExibicao[] =
+
+        agendamentosCliente.map(
+            agendamento => {
+
+                /*
+                 * Os agendamentos que chegam do Context
+                 * já possuem os dados tratados:
+                 *
+                 * nome
+                 * telefone
+                 * hora
+                 * hora_fim
+                 * servicos
+                 * duracao
+                 * valor
+                 */
+
+                return {
+                    id:
+                        agendamento.id,
+
+                    data:
+                        agendamento.data,
+
+                    hora:
+                        agendamento.hora,
+
+                    hora_fim:
+                        agendamento.hora_fim,
+
+                    nome:
+                        agendamento.nome,
+
+                    telefone:
+                        agendamento.telefone,
+
+                    duracao:
+                        agendamento.duracao,
+
+                    valor:
+                        agendamento.valor,
+
+                    blocos:
+                        agendamento.blocos,
+
+                    cancelado:
+                        agendamento.cancelado,
+
+                    servicos:
+                        agendamento.servicos ?? []
+                }
+
+            }
+        )
+
+
     // =========================================================
     // ORDENAR AGENDAMENTOS
     // =========================================================
 
     const agendamentosOrdenados = [
-        ...agendamentosCliente
-    ].sort((a, b) => {
 
-        const dataA =
-            `${a.data} ${a.hora}`
+        ...agendamentosExibicao
 
-        const dataB =
-            `${b.data} ${b.hora}`
+    ].sort(
 
-        return dataA.localeCompare(dataB)
+        (
+            a,
+            b
+        ) => {
 
-    })
+            const dataA =
+                `${a.data} ${a.hora}`
+
+            const dataB =
+                `${b.data} ${b.hora}`
+
+
+            return dataA.localeCompare(
+                dataB
+            )
+
+        }
+
+    )
 
 
     // =========================================================
-    // TELA SEM AGENDAMENTOS
+    // CARREGANDO INICIAL
     // =========================================================
 
     if (
+
+        carregandoAgendamentosCliente &&
+
         agendamentosOrdenados.length === 0
+
+    ) {
+
+        return (
+
+            <div className="
+                w-full
+                min-h-full
+                flex
+                flex-col
+                items-center
+                justify-center
+                gap-4
+                bg-[#121212]
+                text-[#E0E0E0]
+                p-4
+                rounded-xl
+            ">
+
+                <Loader2
+                    size={40}
+                    className="
+                        text-[#D3AF37]
+                        animate-spin
+                    "
+                />
+
+                <p className="
+                    text-sm
+                    text-[#A0A0A0]
+                ">
+
+                    Carregando seus agendamentos...
+
+                </p>
+
+            </div>
+
+        )
+
+    }
+
+
+    // =========================================================
+    // SEM AGENDAMENTOS
+    // =========================================================
+
+    if (
+
+        agendamentosOrdenados.length === 0
+
     ) {
 
         return (
@@ -201,7 +447,9 @@ function cancelarAgendamento() {
                     type="button"
 
                     onClick={() =>
-                        setInterfaceView('day')
+                        setInterfaceView(
+                            'day'
+                        )
                     }
 
                     className="
@@ -222,7 +470,9 @@ function cancelarAgendamento() {
 
                 >
 
-                    <ArrowLeft size={18} />
+                    <ArrowLeft
+                        size={18}
+                    />
 
                     Voltar para o calendário
 
@@ -266,7 +516,6 @@ function cancelarAgendamento() {
                 pb-4
             ">
 
-
                 <div className="
                     flex
                     flex-col
@@ -305,6 +554,36 @@ function cancelarAgendamento() {
 
 
             {/* =================================================
+                INDICADOR DE ATUALIZAÇÃO
+            ================================================= */}
+
+            {carregandoAgendamentosCliente && (
+
+                <div className="
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    text-xs
+                    text-[#A0A0A0]
+                ">
+
+                    <Loader2
+                        size={14}
+                        className="
+                            animate-spin
+                            text-[#D3AF37]
+                        "
+                    />
+
+                    Atualizando agendamentos...
+
+                </div>
+
+            )}
+
+
+            {/* =================================================
                 LISTA
             ================================================= */}
 
@@ -315,67 +594,242 @@ function cancelarAgendamento() {
             ">
 
                 {agendamentosOrdenados.map(
-                    agendamento => (
 
-                        <div
+                    agendamento => {
 
-                            key={
-                                agendamento.id
-                            }
+                        return (
 
-                            className="
-                                w-full
-                                bg-[#1E1E1E]
-                                border
-                                border-[#2A2A2A]
-                                rounded-2xl
-                                p-5
-                                flex
-                                flex-col
-                                gap-4
-                                shadow-lg
-                                transition-all
-                                duration-200
-                                hover:border-[#D3AF37]
-                            "
+                            <div
 
-                        >
+                                key={
+                                    agendamento.id
+                                }
+
+                                className="
+                                    w-full
+                                    bg-[#1E1E1E]
+                                    border
+                                    border-[#2A2A2A]
+                                    rounded-2xl
+                                    p-5
+                                    flex
+                                    flex-col
+                                    gap-4
+                                    shadow-lg
+                                    transition-all
+                                    duration-200
+                                    hover:border-[#D3AF37]
+                                "
+
+                            >
 
 
-                            {/* =================================
-                                DATA E HORÁRIO
-                            ================================= */}
-
-                            <div className="
-                                flex
-                                items-center
-                                justify-between
-                                gap-3
-                            ">
-
+                                {/* =================================
+                                    DATA E HORÁRIO
+                                ================================= */}
 
                                 <div className="
                                     flex
                                     items-center
+                                    justify-between
                                     gap-3
                                 ">
 
                                     <div className="
-                                        w-[45px]
-                                        aspect-square
-                                        rounded-xl
-                                        bg-[#2A2A2A]
                                         flex
                                         items-center
-                                        justify-center
+                                        gap-3
+                                    ">
+
+                                        <div className="
+                                            w-[45px]
+                                            aspect-square
+                                            rounded-xl
+                                            bg-[#2A2A2A]
+                                            flex
+                                            items-center
+                                            justify-center
+                                            border
+                                            border-[#D3AF37]
+                                        ">
+
+                                            <CalendarCheck
+                                                color="#D3AF37"
+                                                size={22}
+                                            />
+
+                                        </div>
+
+
+                                        <div className="
+                                            flex
+                                            flex-col
+                                        ">
+
+                                            <span className="
+                                                font-bold
+                                                text-lg
+                                                text-[#FFFFFF]
+                                            ">
+
+                                                {formatarData(
+                                                    agendamento.data
+                                                )}
+
+                                            </span>
+
+
+                                            <span className="
+                                                text-sm
+                                                text-[#A0A0A0]
+                                                flex
+                                                items-center
+                                                gap-1
+                                            ">
+
+                                                <Clock
+                                                    size={14}
+                                                    color="#757575"
+                                                />
+
+                                                {formatarHorario(
+                                                    agendamento.hora
+                                                )}
+
+                                                {' - '}
+
+                                                {formatarHorario(
+                                                    agendamento.hora_fim
+                                                )}
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <span className="
+                                        bg-[#2A2A2A]
+                                        text-[#D3AF37]
+                                        text-xs
+                                        font-bold
+                                        px-3
+                                        py-1
+                                        rounded-full
                                         border
                                         border-[#D3AF37]
                                     ">
 
-                                        <CalendarCheck
-                                            color="#D3AF37"
-                                            size={22}
+                                        {agendamento.cancelado
+                                            ? 'CANCELADO'
+                                            : 'AGENDADO'
+                                        }
+
+                                    </span>
+
+                                </div>
+
+
+                                {/* =================================
+                                    DIVISÓRIA
+                                ================================= */}
+
+                                <div className="
+                                    w-full
+                                    h-px
+                                    bg-[#2A2A2A]
+                                " />
+
+
+                                {/* =================================
+                                    CLIENTE
+                                ================================= */}
+
+                                <div className="
+                                    flex
+                                    flex-col
+                                    gap-2
+                                ">
+
+                                    <div className="
+                                        flex
+                                        items-center
+                                        gap-2
+                                        text-sm
+                                        text-[#E0E0E0]
+                                    ">
+
+                                        <UserRound
+                                            size={17}
+                                            color="#A0A0A0"
                                         />
+
+                                        <span>
+
+                                            {agendamento.nome ||
+                                                'Cliente'
+                                            }
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <div className="
+                                        flex
+                                        items-center
+                                        gap-2
+                                        text-sm
+                                        text-[#E0E0E0]
+                                    ">
+
+                                        <Phone
+                                            size={17}
+                                            color="#A0A0A0"
+                                        />
+
+                                        <span>
+
+                                            {agendamento.telefone ||
+                                                'Telefone não informado'
+                                            }
+
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+
+                                {/* =================================
+                                    SERVIÇOS
+                                ================================= */}
+
+                                <div className="
+                                    flex
+                                    flex-col
+                                    gap-2
+                                ">
+
+                                    <div className="
+                                        flex
+                                        items-center
+                                        gap-2
+                                        text-sm
+                                        text-[#A0A0A0]
+                                    ">
+
+                                        <Scissors
+                                            size={17}
+                                            color="#757575"
+                                        />
+
+                                        <span>
+
+                                            Serviços
+
+                                        </span>
 
                                     </div>
 
@@ -383,201 +837,214 @@ function cancelarAgendamento() {
                                     <div className="
                                         flex
                                         flex-col
+                                        gap-2
+                                        bg-[#2A2A2A]
+                                        rounded-xl
+                                        p-3
                                     ">
 
-                                        <span className="
-                                            font-bold
-                                            text-lg
-                                            text-[#FFFFFF]
-                                        ">
+                                        {agendamento.servicos.length === 0 ? (
 
-                                            {formatarData(
-                                                agendamento.data
-                                            )}
+                                            <span className="
+                                                text-sm
+                                                text-[#757575]
+                                            ">
 
-                                        </span>
+                                                Nenhum serviço informado.
+
+                                            </span>
+
+                                        ) : (
+
+                                            agendamento.servicos.map(
+
+                                                (
+                                                    servico,
+                                                    index
+                                                ) => (
+
+                                                    <div
+
+                                                        key={
+                                                            `${agendamento.id}-${servico.id}-${index}`
+                                                        }
+
+                                                        className="
+                                                            flex
+                                                            items-center
+                                                            justify-between
+                                                            gap-3
+                                                        "
+
+                                                    >
+
+                                                        <span className="
+                                                            text-sm
+                                                            text-[#E0E0E0]
+                                                        ">
+
+                                                            {
+                                                                servico.nome
+                                                            }
+
+                                                        </span>
 
 
-                                        <span className="
-                                            text-sm
-                                            text-[#A0A0A0]
-                                            flex
-                                            items-center
-                                            gap-1
-                                        ">
+                                                        <span className="
+                                                            text-xs
+                                                            text-[#A0A0A0]
+                                                            whitespace-nowrap
+                                                        ">
 
-                                            <Clock
-                                                size={14}
-                                                color="#757575"
-                                            />
+                                                            {
+                                                                servico.duracao
+                                                            }
 
-                                            {agendamento.hora}
+                                                            {' min'}
 
-                                        </span>
+                                                        </span>
+
+                                                    </div>
+
+                                                )
+
+                                            )
+
+                                        )}
 
                                     </div>
 
                                 </div>
 
 
-                                <span className="
+                                {/* =================================
+                                    RESUMO
+                                ================================= */}
+
+                                <div className="
+                                    flex
+                                    flex-col
+                                    gap-2
                                     bg-[#2A2A2A]
-                                    text-[#D3AF37]
-                                    text-xs
-                                    font-bold
-                                    px-3
-                                    py-1
-                                    rounded-full
-                                    border
-                                    border-[#D3AF37]
-                                ">
-
-                                    AGENDADO
-
-                                </span>
-
-                            </div>
-
-
-                            {/* =================================
-                                DIVISÓRIA
-                            ================================= */}
-
-                            <div className="
-                                w-full
-                                h-px
-                                bg-[#2A2A2A]
-                            " />
-
-
-                            {/* =================================
-                                CLIENTE
-                            ================================= */}
-
-                            <div className="
-                                flex
-                                flex-col
-                                gap-2
-                            ">
-
-
-                                <div className="
-                                    flex
-                                    items-center
-                                    gap-2
-                                    text-sm
-                                    text-[#E0E0E0]
-                                ">
-
-                                    <UserRound
-                                        size={17}
-                                        color="#A0A0A0"
-                                    />
-
-                                    <span>
-                                        {agendamento.nome}
-                                    </span>
-
-                                </div>
-
-
-                                <div className="
-                                    flex
-                                    items-center
-                                    gap-2
-                                    text-sm
-                                    text-[#E0E0E0]
-                                ">
-
-                                    <Phone
-                                        size={17}
-                                        color="#A0A0A0"
-                                    />
-
-                                    <span>
-                                        {agendamento.telefone}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-
-                            {/* =================================
-                                DURAÇÃO
-                            ================================= */}
-
-                            <div className="
-                                flex
-                                items-center
-                                justify-between
-                                bg-[#2A2A2A]
-                                rounded-xl
-                                p-3
-                            ">
-
-
-                                <div className="
-                                    flex
-                                    items-center
-                                    gap-2
-                                    text-sm
-                                    text-[#A0A0A0]
-                                ">
-
-                                    <Scissors
-                                        size={17}
-                                        color="#757575"
-                                    />
-
-                                    <span>
-                                        Duração estimada
-                                    </span>
-
-                                </div>
-
-
-                                <strong className="text-[#FFFFFF]">
-
-                                    {agendamento.duracao ?? 0} min
-
-                                </strong>
-
-                            </div>
-
-                            <button
-
-                                type="button"
-
-                                onClick={() =>
-                                    abrirCancelar(
-                                        agendamento
-                                    )
-                                }
-
-                                className="
-                                    w-full
                                     rounded-xl
-                                    border-2
-                                    border-[#D32F2F]
-                                    text-[#FF4D4D]
-                                    py-3
-                                    font-semibold
-                                    hover:bg-[#D32F2F]
-                                    hover:text-[#FFFFFF]
-                                    transition-all
-                                    duration-200
-                                "
+                                    p-3
+                                ">
 
-                            >
+                                    <div className="
+                                        flex
+                                        items-center
+                                        justify-between
+                                    ">
 
-                                Cancelar agendamento
+                                        <span className="
+                                            text-sm
+                                            text-[#A0A0A0]
+                                        ">
 
-                            </button>
+                                            Duração estimada
 
-                        </div>
+                                        </span>
 
-                    )
+
+                                        <strong className="
+                                            text-[#FFFFFF]
+                                        ">
+
+                                            {
+                                                agendamento.duracao
+                                            }
+
+                                            {' min'}
+
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div className="
+                                        flex
+                                        items-center
+                                        justify-between
+                                    ">
+
+                                        <span className="
+                                            text-sm
+                                            text-[#A0A0A0]
+                                        ">
+
+                                            Total
+
+                                        </span>
+
+
+                                        <strong className="
+                                            text-[#D3AF37]
+                                        ">
+
+                                            R$ {
+
+                                                Number(
+                                                    agendamento.valor
+                                                )
+                                                    .toFixed(2)
+                                                    .replace(
+                                                        '.',
+                                                        ','
+                                                    )
+
+                                            }
+
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+
+                                {/* =================================
+                                    CANCELAR
+                                ================================= */}
+
+                                {!agendamento.cancelado && (
+
+                                    <button
+
+                                        type="button"
+
+                                        onClick={() =>
+                                            abrirCancelar(
+                                                agendamento
+                                            )
+                                        }
+
+                                        className="
+                                            w-full
+                                            rounded-xl
+                                            border-2
+                                            border-[#D32F2F]
+                                            text-[#FF4D4D]
+                                            py-3
+                                            font-semibold
+                                            hover:bg-[#D32F2F]
+                                            hover:text-[#FFFFFF]
+                                            transition-all
+                                            duration-200
+                                        "
+
+                                    >
+
+                                        Cancelar agendamento
+
+                                    </button>
+
+                                )}
+
+                            </div>
+
+                        )
+
+                    }
+
                 )}
 
             </div>
@@ -592,7 +1059,9 @@ function cancelarAgendamento() {
                 type="button"
 
                 onClick={() =>
-                    setInterfaceView('day')
+                    setInterfaceView(
+                        'day'
+                    )
                 }
 
                 className="
@@ -622,8 +1091,12 @@ function cancelarAgendamento() {
 
             </button>
 
-            {
-                modalCancelar &&
+
+            {/* =================================================
+                MODAL CANCELAMENTO
+            ================================================= */}
+
+            {modalCancelar && (
 
                 <div className="
                     fixed
@@ -649,12 +1122,28 @@ function cancelarAgendamento() {
                         border-[#2A2A2A]
                     ">
 
-                        <div className="flex justify-end">
+
+                        <div className="
+                            flex
+                            justify-end
+                        ">
+
                             <button
+
+                                type="button"
+
                                 onClick={() => {
-                                    setModalCancelar(false)
-                                    setAgendamentoSelecionado(null)
+
+                                    setModalCancelar(
+                                        false
+                                    )
+
+                                    setAgendamentoSelecionado(
+                                        null
+                                    )
+
                                 }}
+
                                 className="
                                     bg-[#2A2A2A]
                                     rounded-full
@@ -662,12 +1151,22 @@ function cancelarAgendamento() {
                                     hover:bg-[#333333]
                                     transition-colors
                                 "
+
                             >
-                                <X size={20} color="#757575" />
+
+                                <X
+                                    size={20}
+                                    color="#757575"
+                                />
+
                             </button>
+
                         </div>
 
-                        <div className="text-center">
+
+                        <div className="
+                            text-center
+                        ">
 
                             <h2 className="
                                 text-xl
@@ -678,6 +1177,7 @@ function cancelarAgendamento() {
                                 Cancelar agendamento?
 
                             </h2>
+
 
                             <p className="
                                 text-sm
@@ -697,7 +1197,10 @@ function cancelarAgendamento() {
                             gap-3
                         ">
 
+
                             <button
+
+                                type="button"
 
                                 onClick={() => {
 
@@ -732,6 +1235,8 @@ function cancelarAgendamento() {
 
                             <button
 
+                                type="button"
+
                                 onClick={
                                     cancelarAgendamento
                                 }
@@ -753,12 +1258,14 @@ function cancelarAgendamento() {
 
                             </button>
 
+
                         </div>
 
                     </div>
 
                 </div>
-            }
+
+            )}
 
         </div>
 

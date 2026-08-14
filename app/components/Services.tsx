@@ -1,15 +1,20 @@
 'use client'
 
 import { Check } from 'lucide-react'
-import { servicesType } from "../types/service"
-
+import { ServicoSelecionadoType  } from "../types/service"
+import { ServicoType } from '../types/Servico'
 type Props = {
+
     serviços: {
+
         checkbox: boolean
-        serviço: string
-        price: number
+
+        servico: ServicoType
+
     }
+
     onServices: () => void
+
 }
 
 export default function Services({ serviços, onServices }: Props) {
@@ -104,7 +109,7 @@ export default function Services({ serviços, onServices }: Props) {
                     }
                 `}>
 
-                    {serviços.serviço}
+                    {serviços.servico.nome}
 
                 </span>
 
@@ -126,7 +131,7 @@ export default function Services({ serviços, onServices }: Props) {
                 }
             `}>
 
-                R${serviços.price}
+                R${serviços.servico.valor}
 
             </span>
 
