@@ -115,42 +115,6 @@ const HORARIOS_DISPONIVEIS = [
 ]
 
 // =========================================================
-// DURAÇÃO DOS SERVIÇOS
-// =========================================================
-
-// const DURACAO_SERVICOS: Record<string, number> = {
-
-//   'Corte social': 25,
-
-//   'Degrade 0/1/2': 30,
-
-//   'Navalhado': 35,
-
-//   'Corte tesoura': 45,
-
-//   'Corte kids': 45,
-
-
-//   'Barba': 20,
-
-//   'Sobrancelha': 5,
-
-
-//   'Alisamento': 30,
-
-//   'Progressiva': 105,
-
-
-//   'Pigmentação': 20,
-
-//   'Tintura': 20,
-
-//   'Luzes': 110,
-
-//   'Platinado': 130,
-// }
-
-// =========================================================
 // COMPONENTE
 // =========================================================
 
@@ -233,91 +197,6 @@ const {
     setServicosSelecionadosIds
   ] = useState<string[]>([])
 
-  // const [
-  //   services,
-  //   setServices
-  // ] = useState<ServicoSelecionadoType []>([
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Corte social',
-  //     price: 30
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Degrade 0/1/2',
-  //     price: 35
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Navalhado',
-  //     price: 40
-  //   },
-
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Corte tesoura',
-  //     price: 45
-  //   },
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Corte kids',
-  //     price: 40
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Barba',
-  //     price: 30
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Sobrancelha',
-  //     price: 10
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Alisamento',
-  //     price: 45
-  //   },
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Progressiva',
-  //     price: 150
-  //   },
-
-
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Pigmentação',
-  //     price: 25
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Tintura',
-  //     price: 20
-  //   },
-  //       {
-  //     checkbox: false,
-  //     serviço: 'Luzes',
-  //     price: 100
-  //   },
-
-  //   {
-  //     checkbox: false,
-  //     serviço: 'Platinado',
-  //     price: 120
-  //   },
-
-  // ])
-
   // =======================================================
   // SELECIONAR SERVIÇO
   // =======================================================
@@ -342,6 +221,22 @@ const {
       ]
 
     })
+
+  }
+
+  // =======================================================
+  // FORMATAR DATA PARA EXIBIÇÃO
+  // =======================================================
+
+  function formatarDataExibicao(
+    dataString: string
+  ) {
+
+    const [ano, mes, dia] = dataString
+      .split('-')
+      .map(Number)
+
+    return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`
 
   }
 
@@ -1507,35 +1402,6 @@ const {
       // CRIAR AGENDAMENTO
       // ===================================================
 
-      // const novoAgendamento =
-      //   await criarAgendamento({
-
-      //     cliente_id:
-      //       cliente.id,
-
-      //     servicos_id:
-      //       servicosSelecionadosIds,
-
-      //     data:
-      //       dataSelecionada,
-
-      //     hora_inicio:
-      //       horarioSelecionado,
-
-      //     hora_fim:
-      //       horaFim,
-
-      //     observacoes:
-      //       undefined,
-
-      //     concluido:
-      //       false,
-
-      //     cancelado:
-      //       false
-
-      //   })
-
 await adicionarAgendamento(
 
   // ==========================================
@@ -1623,16 +1489,6 @@ await adicionarAgendamento(
   }
 
 )
-
-
-      // ===================================================
-      // LOG PARA CONFERÊNCIA
-      // ===================================================
-
-      // console.log(
-      //   'Agendamento criado no Supabase:',
-      //   novoAgendamento
-      // )
 
 
       // ===================================================
@@ -1965,7 +1821,7 @@ await adicionarAgendamento(
             </span>
 
             <strong className="text-[#FFFFFF]">
-              {dataSelecionada}
+              {formatarDataExibicao(dataSelecionada)}
             </strong>
 
           </div>
@@ -2194,6 +2050,7 @@ await adicionarAgendamento(
 
                       className={`
 
+
                         w-full
 
                         rounded-lg
@@ -2267,9 +2124,7 @@ await adicionarAgendamento(
                         text-[#757575]
                       ">
 
-                        Data: {
-                          sugestao.data
-                        }
+                        Data: {formatarDataExibicao(sugestao.data)}
 
                       </span>
 

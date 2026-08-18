@@ -6,7 +6,8 @@ import {
 } from 'lucide-react'
 
 import {
-    useCentralDados
+    useCentralDados,
+    useAgendamentos
 } from '../context/PersistData'
 
 
@@ -30,6 +31,15 @@ export default function CallendarMonth() {
         mesAnterior
 
     } = useCentralDados()
+
+
+    // =========================================================
+    // AGENDAMENTOS - PARA VERIFICAR LOADING
+    // =========================================================
+
+    const {
+        isLoading
+    } = useAgendamentos()
 
 
     // =========================================================
@@ -165,6 +175,22 @@ export default function CallendarMonth() {
         'Sábado'
 
     ]
+
+
+    // =========================================================
+    // VERIFICAR SE DATA É SÁBADO
+    // =========================================================
+
+    function dataEhSabado(
+        data: Date
+    ) {
+
+        const diaDaSemana =
+            data.getDay() // 0 = Domingo, 6 = Sábado
+
+        return diaDaSemana === 6
+
+    }
 
 
     // =========================================================
@@ -347,6 +373,8 @@ export default function CallendarMonth() {
 
         alemDoLimite: boolean
 
+        ehSabado: boolean
+
         data: Date
 
     }[] = []
@@ -402,6 +430,9 @@ export default function CallendarMonth() {
             alemDoLimite:
                 data.getTime() >
                 dataMaximaAgendamento.getTime(),
+
+            ehSabado:
+                dataEhSabado(data),
 
             data
 
@@ -482,6 +513,9 @@ export default function CallendarMonth() {
             alemDoLimite:
                 ehAlemDoLimite,
 
+            ehSabado:
+                dataEhSabado(data),
+
             data
 
         })
@@ -537,6 +571,9 @@ export default function CallendarMonth() {
             alemDoLimite:
                 data.getTime() >
                 dataMaximaAgendamento.getTime(),
+
+            ehSabado:
+                dataEhSabado(data),
 
             data
 
@@ -603,6 +640,21 @@ export default function CallendarMonth() {
             dataSelecionada.getTime() >
 
             dataMaximaAgendamento.getTime()
+
+        ) {
+
+            return
+
+        }
+
+
+        // =====================================================
+        // NÃO PERMITE SÁBADOS
+        // =====================================================
+
+        if (
+
+            dataEhSabado(dataSelecionada)
 
         ) {
 
@@ -843,6 +895,33 @@ export default function CallendarMonth() {
 
 
             {/* =====================================================
+                LEGENDA DE SÁBADO
+            ====================================================== */}
+
+            <div className="
+                mb-4
+                p-3
+                bg-[#2A1A1A]
+                border-2
+                border-[#FF6B6B]
+                rounded-lg
+                text-center
+            ">
+
+                <p className="
+                    text-[#FF6B6B]
+                    text-sm
+                    font-bold
+                ">
+
+                    ⚠️ AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS - ATENDIMENTO POR ORDEM DE CHEGADA
+
+                </p>
+
+            </div>
+
+
+            {/* =====================================================
                 CALENDÁRIO
             ====================================================== */}
 
@@ -851,210 +930,350 @@ export default function CallendarMonth() {
                 mt-4
             ">
 
+                {/* =====================================================
+                    ANIMAÇÃO DE CARREGAMENTO
+                ====================================================== */}
 
-                <div className="
-                    grid
-                    grid-cols-7
-                    gap-2
-                ">
+                {isLoading ? (
 
+                    <div
+                        className="
+                            w-full
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+                            py-12
+                            gap-6
+                        "
+                    >
 
-                    {/* =================================================
-                        NOMES DOS DIAS
-                    ================================================== */}
+                        {/* Spinner */}
+                        <div
+                            className="
+                                w-12
+                                h-12
+                                border-4
+                                border-[#D3AF37]
+                                border-t-transparent
+                                rounded-full
+                                animate-spin
+                            "
+                        />
 
-                    {
-                        diaSemanaNome.map(
+                        <p
+                            className="
+                                text-[#A0A0A0]
+                                text-sm
+                                animate-pulse
+                            "
+                        >
+                            Carregando calendário...
+                        </p>
 
-                            (dia) => (
+                        {/* Skeleton do calendário */}
+                        <div
+                            className="
+                                w-full
+                                grid
+                                grid-cols-7
+                                gap-2
+                                mt-2
+                            "
+                        >
+
+                            {/* Skeleton dos dias da semana */}
+                            {[...Array(7)].map((_, index) => (
 
                                 <div
-
-                                    key={dia}
-
+                                    key={`header-${index}`}
                                     className="
-                                        text-xs
-                                        text-[#A0A0A0]
-                                        font-semibold
-                                        text-center
-                                        pb-3
+                                        h-6
+                                        bg-[#1E1E1E]
+                                        rounded
+                                        animate-pulse
                                     "
+                                />
 
-                                >
+                            ))}
 
-                                    {
-                                        dia.slice(
-                                            0,
-                                            3
-                                        )
-                                    }
+                            {/* Skeleton dos dias do mês */}
+                            {[...Array(35)].map((_, index) => (
 
-                                </div>
+                                <div
+                                    key={`day-${index}`}
+                                    className="
+                                        aspect-square
+                                        bg-[#1E1E1E]
+                                        rounded-xl
+                                        animate-pulse
+                                        border
+                                        border-[#2A2A2A]
+                                    "
+                                />
 
-                            )
+                            ))}
 
-                        )
-                    }
+                        </div>
 
+                    </div>
 
-                    {/* =================================================
-                        DIAS
-                    ================================================== */}
+                ) : (
 
-                    {
-                        calendario.map(
+                    // =====================================================
+                    // CALENDÁRIO
+                    // =====================================================
 
-                            (
-                                item,
-                                index
-                            ) => {
-
-
-                                // =============================================
-                                // VERIFICAR SE PODE SELECIONAR
-                                // =============================================
-
-                                const podeSelecionar =
-
-                                    item.atual &&
-
-                                    !item.passado &&
-
-                                    !item.alemDoLimite
+                    <div className="
+                        grid
+                        grid-cols-7
+                        gap-2
+                    ">
 
 
-                                return (
+                        {/* =================================================
+                            NOMES DOS DIAS
+                        ================================================== */}
 
-                                    <button
+                        {
+                            diaSemanaNome.map(
 
-                                        key={index}
+                                (dia) => (
 
-                                        onClick={() => {
+                                    <div
 
-                                            if (
-                                                podeSelecionar
-                                            ) {
-
-                                                selecionarDia(
-                                                    item.data
-                                                )
-
-                                            }
-
-                                        }}
-
-                                        disabled={
-                                            !podeSelecionar
-                                        }
+                                        key={dia}
 
                                         className={`
-
-                                            aspect-square
-
-                                            w-full
-
-                                            rounded-xl
-
-                                            flex
-
-                                            flex-col
-
-                                            justify-center
-
-                                            items-center
-
-                                            text-sm
-
-                                            font-medium
-
-                                            transition-all
-
-                                            duration-200
-
-                                            gap-1
-
-                                            border-2
-
+                                            text-xs
+                                            font-semibold
+                                            text-center
+                                            pb-3
                                             ${
-
-                                                item.hoje
-
-                                                    ? 'bg-[#1E1E1E] border-[#D3AF37] text-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
-
-                                                    : item.passado
-
-                                                        ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
-
-                                                        : item.alemDoLimite
-
-                                                            ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
-
-                                                            : item.atual
-
-                                                                ? 'bg-[#1E1E1E] border-[#2A2A2A] text-[#E0E0E0] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
-
-                                                                : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#757575] cursor-not-allowed'
-
+                                                dia === 'Sábado'
+                                                    ? 'text-[#FF6B6B]'
+                                                    : 'text-[#A0A0A0]'
                                             }
-
                                         `}
 
                                     >
 
                                         {
-                                            item.dia
+                                            dia.slice(
+                                                0,
+                                                3
+                                            )
                                         }
 
+                                    </div>
 
-                                        <div
+                                )
+
+                            )
+                        }
+
+
+                        {/* =================================================
+                            DIAS
+                        ================================================== */}
+
+                        {
+                            calendario.map(
+
+                                (
+                                    item,
+                                    index
+                                ) => {
+
+
+                                    // =============================================
+                                    // VERIFICAR SE PODE SELECIONAR
+                                    // =============================================
+
+                                    const podeSelecionar =
+
+                                        item.atual &&
+
+                                        !item.passado &&
+
+                                        !item.alemDoLimite &&
+
+                                        !item.ehSabado
+
+
+                                    // =============================================
+                                    // VERIFICAR SE É SÁBADO PARA DESTAQUE
+                                    // =============================================
+
+                                    const isSabado = item.ehSabado
+
+
+                                    return (
+
+                                        <button
+
+                                            key={index}
+
+                                            onClick={() => {
+
+                                                if (
+                                                    podeSelecionar
+                                                ) {
+
+                                                    selecionarDia(
+                                                        item.data
+                                                    )
+
+                                                }
+
+                                            }}
+
+                                            disabled={
+                                                !podeSelecionar
+                                            }
 
                                             className={`
 
-                                                w-[8px]
 
-                                                h-[8px]
+                                                aspect-square
 
-                                                rounded-full
+                                                w-full
+
+                                                rounded-xl
+
+                                                flex
+
+                                                flex-col
+
+                                                justify-center
+
+                                                items-center
+
+                                                text-sm
+
+                                                font-medium
 
                                                 transition-all
 
                                                 duration-200
 
+                                                gap-1
+
+                                                border-2
+
+                                                relative
+
                                                 ${
 
-                                                    item.hoje
+                                                    isSabado
 
-                                                        ? 'bg-[#D3AF37]'
+                                                        ? 'bg-[#2A1A1A] border-[#FF6B6B] text-[#FF6B6B] cursor-not-allowed'
 
-                                                        : item.atual &&
-                                                          !item.passado &&
-                                                          !item.alemDoLimite
+                                                        : item.hoje
 
-                                                            ? 'bg-[#FFFFFF]'
+                                                            ? 'bg-[#1E1E1E] border-[#D3AF37] text-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-                                                            : 'bg-[#333333]'
+                                                            : item.passado
+
+                                                                ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
+
+                                                                : item.alemDoLimite
+
+                                                                    ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
+
+                                                                    : item.atual
+
+                                                                        ? 'bg-[#1E1E1E] border-[#2A2A2A] text-[#E0E0E0] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
+
+                                                                        : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#757575] cursor-not-allowed'
 
                                                 }
 
                                             `}
 
-                                        />
+                                        >
 
-                                    </button>
+                                            {isSabado && (
 
-                                )
+                                                <span className="
+                                                    absolute
+                                                    -top-1
+                                                    -right-1
+                                                    text-[8px]
+                                                    text-[#FF6B6B]
+                                                    bg-[#1A1A1A]
+                                                    px-1
+                                                    rounded
+                                                    border
+                                                    border-[#FF6B6B]
+                                                ">
 
-                            }
+                                                    SÁB
 
-                        )
-                    }
+                                                </span>
+
+                                            )}
+
+                                            {
+                                                item.dia
+                                            }
 
 
-                </div>
+                                            <div
 
+                                                className={`
+
+
+                                                    w-[8px]
+
+                                                    h-[8px]
+
+                                                    rounded-full
+
+                                                    transition-all
+
+                                                    duration-200
+
+                                                    ${
+
+                                                        isSabado
+
+                                                            ? 'bg-[#FF6B6B]'
+
+                                                            : item.hoje
+
+                                                                ? 'bg-[#D3AF37]'
+
+                                                                : item.atual &&
+                                                                  !item.passado &&
+                                                                  !item.alemDoLimite &&
+                                                                  !item.ehSabado
+
+                                                                    ? 'bg-[#FFFFFF]'
+
+                                                                    : 'bg-[#333333]'
+
+                                                    }
+
+                                                `}
+
+                                            />
+
+                                        </button>
+
+                                    )
+
+                                }
+
+                            )
+                        }
+
+
+                    </div>
+
+                )}
 
             </div>
-
 
         </div>
 

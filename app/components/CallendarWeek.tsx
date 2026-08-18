@@ -244,6 +244,22 @@ carregarAgendamentosPorPeriodo
 
 
     // =========================================================
+    // VERIFICAR SE DATA É SÁBADO
+    // =========================================================
+
+    function dataEhSabado(
+        data: Date
+    ) {
+
+        const diaDaSemana =
+            data.getDay() // 0 = Domingo, 6 = Sábado
+
+        return diaDaSemana === 6
+
+    }
+
+
+    // =========================================================
     // VERIFICAR SE DATA ESTÁ INDISPONÍVEL
     // =========================================================
 
@@ -255,7 +271,9 @@ carregarAgendamentosPorPeriodo
 
             dataEstaNoPassado(data) ||
 
-            dataEstaAlemDoLimite(data)
+            dataEstaAlemDoLimite(data) ||
+
+            dataEhSabado(data)
 
         )
 
@@ -338,6 +356,11 @@ carregarAgendamentosPorPeriodo
         horarioVerificado: string
 
     ) {
+
+        // Se for sábado, todos os horários estão ocupados
+        if (dataEhSabado(dia)) {
+            return true
+        }
 
         const data =
             formatarData(
@@ -543,6 +566,23 @@ carregarAgendamentosPorPeriodo
 
 
         // =============================================
+        // DATA É SÁBADO
+        // =============================================
+
+        if (
+
+            dataEhSabado(
+                dia
+            )
+
+        ) {
+
+            return
+
+        }
+
+
+        // =============================================
         // HORÁRIO OCUPADO
         // =============================================
 
@@ -647,7 +687,7 @@ carregarAgendamentosPorPeriodo
         diasSemana[6]
 
         
-        // =========================================================
+    // =========================================================
     // BUSCAR AGENDAMENTOS DA SEMANA VISÍVEL
     // =========================================================
 
@@ -673,6 +713,7 @@ carregarAgendamentosPorPeriodo
         ultimoDia.getTime(),
         carregarAgendamentosPorPeriodo
     ])
+
     // =========================================================
     // INÍCIO DA SEMANA ATUAL
     // =========================================================
@@ -956,6 +997,33 @@ carregarAgendamentosPorPeriodo
 
 
             {/* =====================================================
+                LEGENDA DE SÁBADO
+            ====================================================== */}
+
+            <div className="
+                mb-4
+                p-3
+                bg-[#2A1A1A]
+                border-2
+                border-[#FF6B6B]
+                rounded-lg
+                text-center
+            ">
+
+                <p className="
+                    text-[#FF6B6B]
+                    text-sm
+                    font-bold
+                ">
+
+                    ⚠️ AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS - ATENDIMENTO POR ORDEM DE CHEGADA
+
+                </p>
+
+            </div>
+
+
+            {/* =====================================================
                 CABEÇALHO DOS DIAS
             ====================================================== */}
 
@@ -989,9 +1057,16 @@ carregarAgendamentosPorPeriodo
                             )
 
 
+                        const ehSabado =
+                            dataEhSabado(
+                                dia
+                            )
+
+
                         const indisponivel =
                             passado ||
-                            alemDoLimite
+                            alemDoLimite ||
+                            ehSabado
 
 
                         const isHoje =
@@ -1022,11 +1097,14 @@ carregarAgendamentosPorPeriodo
                                     transition-all
                                     duration-200
                                     border-2
+                                    relative
 
                                     ${
                                         indisponivel
 
-                                            ? 'bg-[#333333] border-[#333333]'
+                                            ? ehSabado
+                                                ? 'bg-[#2A1A1A] border-[#FF6B6B]'
+                                                : 'bg-[#333333] border-[#333333]'
 
                                             : isHoje
 
@@ -1043,7 +1121,9 @@ carregarAgendamentosPorPeriodo
                                     ${
                                         indisponivel
 
-                                            ? 'text-[#757575]'
+                                            ? ehSabado
+                                                ? 'text-[#FF6B6B]'
+                                                : 'text-[#757575]'
 
                                             : 'text-[#A0A0A0]'
                                     }
@@ -1066,7 +1146,9 @@ carregarAgendamentosPorPeriodo
                                     ${
                                         indisponivel
 
-                                            ? 'text-[#757575]'
+                                            ? ehSabado
+                                                ? 'text-[#FF6B6B]'
+                                                : 'text-[#757575]'
 
                                             : isHoje
 
@@ -1083,14 +1165,48 @@ carregarAgendamentosPorPeriodo
                                 </span>
 
 
-                                {indisponivel && (
+                                {ehSabado && (
+
+                                    <span className="
+                                        absolute
+                                        -top-1
+                                        -right-1
+                                        text-[8px]
+                                        text-[#FF6B6B]
+                                        bg-[#1A1A1A]
+                                        px-1
+                                        rounded
+                                        border
+                                        border-[#FF6B6B]
+                                    ">
+
+                                        SÁB
+
+                                    </span>
+
+                                )}
+
+                                {passado && (
 
                                     <span className="
                                         text-[9px]
                                         text-[#757575]
                                     ">
 
-                                        indis.
+                                        passado
+
+                                    </span>
+
+                                )}
+
+                                {alemDoLimite && (
+
+                                    <span className="
+                                        text-[9px]
+                                        text-[#757575]
+                                    ">
+
+                                        limite
 
                                     </span>
 
@@ -1183,6 +1299,13 @@ carregarAgendamentosPorPeriodo
                                         )
 
 
+                                    const ehSabado =
+
+                                        dataEhSabado(
+                                            dia
+                                        )
+
+
                                     const ocupado =
 
                                         horarioEstaOcupado(
@@ -1194,11 +1317,15 @@ carregarAgendamentosPorPeriodo
                                         )
 
 
+                                    // Verificar se o horário está disponível
+                                    // (passado, limite e sábado são indisponíveis)
                                     const indisponivel =
 
                                         passado ||
 
                                         alemDoLimite ||
+
+                                        ehSabado ||
 
                                         ocupado
 
@@ -1244,19 +1371,23 @@ carregarAgendamentosPorPeriodo
                                                 justify-center
                                                 gap-1
                                                 border-2
+                                                relative
 
                                                 ${
                                                     passado ||
-
                                                     alemDoLimite
 
                                                         ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
 
-                                                        : ocupado
+                                                        : ehSabado
 
-                                                            ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
+                                                            ? 'bg-[#2A1A1A] border-[#FF6B6B] cursor-not-allowed'
 
-                                                            : 'bg-[#1E1E1E] border-[#2A2A2A] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
+                                                            : ocupado
+
+                                                                ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
+
+                                                                : 'bg-[#1E1E1E] border-[#2A2A2A] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
                                                 }
                                             `}
 
@@ -1268,14 +1399,19 @@ carregarAgendamentosPorPeriodo
 
                                                 ${
                                                     passado ||
-
-                                                    alemDoLimite ||
-
-                                                    ocupado
+                                                    alemDoLimite
 
                                                         ? 'text-[#757575]'
 
-                                                        : 'text-[#E0E0E0]'
+                                                        : ehSabado
+
+                                                            ? 'text-[#FF6B6B]'
+
+                                                            : ocupado
+
+                                                                ? 'text-[#757575]'
+
+                                                                : 'text-[#E0E0E0]'
                                                 }
                                             `}>
 
@@ -1288,11 +1424,15 @@ carregarAgendamentosPorPeriodo
 
                                                             ? 'indis.'
 
-                                                            : ocupado
+                                                            : ehSabado
 
-                                                                ? 'ocupado'
+                                                                ? 'sábado'
 
-                                                                : 'livre'
+                                                                : ocupado
+
+                                                                    ? 'ocupado'
+
+                                                                    : 'livre'
                                                 }
 
                                             </span>
@@ -1307,18 +1447,42 @@ carregarAgendamentosPorPeriodo
 
                                                 ${
                                                     passado ||
-
                                                     alemDoLimite
 
                                                         ? 'bg-[#757575]'
 
-                                                        : ocupado
+                                                        : ehSabado
 
-                                                            ? 'bg-[#D3AF37]'
+                                                            ? 'bg-[#FF6B6B]'
 
-                                                            : 'bg-[#FFFFFF]'
+                                                            : ocupado
+
+                                                                ? 'bg-[#D3AF37]'
+
+                                                                : 'bg-[#FFFFFF]'
                                                 }
                                             `} />
+
+                                            {ehSabado && (
+
+                                                <span className="
+                                                    absolute
+                                                    -top-1
+                                                    -right-1
+                                                    text-[6px]
+                                                    text-[#FF6B6B]
+                                                    bg-[#1A1A1A]
+                                                    px-1
+                                                    rounded
+                                                    border
+                                                    border-[#FF6B6B]
+                                                ">
+
+                                                    ❌
+
+                                                </span>
+
+                                            )}
 
                                         </div>
 

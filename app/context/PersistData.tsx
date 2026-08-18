@@ -69,28 +69,28 @@ type CentralDadosContextType = {
 
     agendamentos: AgendamentoType[]
 
-adicionarAgendamento: (
-    agendamento: CriarAgendamentoType,
-    dadosLocal: Omit<AgendamentoLocalType, 'id'>
-) => Promise<void>
+    adicionarAgendamento: (
+        agendamento: CriarAgendamentoType,
+        dadosLocal: Omit<AgendamentoLocalType, 'id'>
+    ) => Promise<void>
 
     removerAgendamento: (
         id: string
     ) => Promise<void>
 
-
     carregandoAgendamentosCliente: boolean
 
-carregarAgendamentosPorPeriodo: (
+    carregarAgendamentosPorPeriodo: (
         dataInicio: string,
         dataFim: string
     ) => Promise<void>
+
     // ====================================================
     // AGENDAMENTOS DO CLIENTE
     // ====================================================
 
-agendamentosCliente:
-    AgendamentoLocalType[]
+    agendamentosCliente:
+        AgendamentoLocalType[]
 
     adicionarAgendamentoCliente: () => Promise<void>
 
@@ -107,6 +107,9 @@ agendamentosCliente:
 
     carregandoAgendamentos: boolean
 
+    // NOVO: ADICIONAR ESTA LINHA
+    isLoading: boolean
+
 
     // ====================================================
     // CLIENTE
@@ -117,7 +120,6 @@ agendamentosCliente:
     definirClienteId: (
         id: string | null
     ) => void
-
 
     // ====================================================
     // DATA VISUALIZADA
@@ -213,6 +215,7 @@ export function CentralDadosProvider({
         setAgendamentos
     ] = useState<AgendamentoType[]>([])
 
+    
 
     // ====================================================
     // AGENDAMENTOS DO CLIENTE
@@ -246,9 +249,21 @@ const [
     ] = useState(false)
 
 
+// ====================================================
+// ESTADO DE LOADING GERAL (ISLOADING)
+// ====================================================
+
+const [
+    isLoading,
+    setIsLoading
+] = useState(false)
+
     // ====================================================
     // CONTROLE DO LOCAL STORAGE
     // ====================================================
+
+
+
 
     const [
         localStorageCarregado,
@@ -532,50 +547,43 @@ const [
     // BUSCAR AGENDAMENTOS POR DATA
     // ====================================================
 
-    const carregarAgendamentosPorData =
-        useCallback(
-            async (
-                data: string
-            ) => {
+const carregarAgendamentosPorData =
+    useCallback(
+        async (
+            data: string
+        ) => {
 
-                setCarregandoAgendamentos(
-                    true
+            setCarregandoAgendamentos(true)
+            setIsLoading(true) // <- ADICIONAR ESTA LINHA
+
+            try {
+
+                const dados =
+                    await buscarAgendamentosPorData(
+                        data
+                    )
+
+                setAgendamentos(
+                    dados
                 )
 
+            } catch (error) {
 
-                try {
+                console.error(
+                    'Erro ao carregar agendamentos:',
+                    error
+                )
 
-                    const dados =
-                        await buscarAgendamentosPorData(
-                            data
-                        )
+            } finally {
 
+                setCarregandoAgendamentos(false)
+                setIsLoading(false) // <- ADICIONAR ESTA LINHA
 
-                    setAgendamentos(
-                        dados
-                    )
+            }
 
-
-                } catch (error) {
-
-                    console.error(
-                        'Erro ao carregar agendamentos:',
-                        error
-                    )
-
-                } finally {
-
-                    setCarregandoAgendamentos(
-                        false
-                    )
-
-                }
-
-            },
-            []
-        )
-
-
+        },
+        []
+    )
     // ====================================================
     // BUSCAR AGENDAMENTOS DO SUPABASE
     // ====================================================
@@ -603,9 +611,8 @@ const carregarAgendamentosPorPeriodo =
             dataFim: string
         ) => {
 
-            setCarregandoAgendamentos(
-                true
-            )
+            setCarregandoAgendamentos(true)
+            setIsLoading(true) // <- ADICIONAR ESTA LINHA
 
             try {
 
@@ -628,9 +635,8 @@ const carregarAgendamentosPorPeriodo =
 
             } finally {
 
-                setCarregandoAgendamentos(
-                    false
-                )
+                setCarregandoAgendamentos(false)
+                setIsLoading(false) // <- ADICIONAR ESTA LINHA
 
             }
 
@@ -638,23 +644,16 @@ const carregarAgendamentosPorPeriodo =
         []
     )
 
-
-
 const carregarAgendamentosCliente =
     useCallback(
         async () => {
 
             if (!clienteId) {
-
                 return
-
             }
 
-
-            setCarregandoAgendamentosCliente(
-                true
-            )
-
+            setCarregandoAgendamentosCliente(true)
+            setIsLoading(true) // <- ADICIONAR ESTA LINHA
 
             try {
 
@@ -662,7 +661,6 @@ const carregarAgendamentosCliente =
                     await buscarAgendamentosPorCliente(
                         clienteId
                     )
-
 
                 setAgendamentosCliente(
                     dadosLocais => {
@@ -869,7 +867,7 @@ dados.forEach(
                 setCarregandoAgendamentosCliente(
                     false
                 )
-
+setIsLoading(false) 
             }
 
         },
@@ -1557,108 +1555,112 @@ useEffect(() => {
     // PROVIDER
     // ====================================================
 
-    return (
+return (
 
-        <CentralDadosContext.Provider
-            value={{
+    <CentralDadosContext.Provider
+        value={{
 
-                // =========================================
-                // AGENDAMENTOS
-                // =========================================
+            // =========================================
+            // AGENDAMENTOS
+            // =========================================
 
-                agendamentos,
+            agendamentos,
 
-                adicionarAgendamento,
+            adicionarAgendamento,
 
-                removerAgendamento,
+            removerAgendamento,
 
-                carregandoAgendamentosCliente,
-
-
-                // =========================================
-                // AGENDAMENTOS DO CLIENTE
-                // =========================================
-
-                agendamentosCliente,
-carregarAgendamentosPorPeriodo,
-                adicionarAgendamentoCliente,
-
-                removerAgendamentoCliente,
-
-                carregarAgendamentosCliente,
+            carregandoAgendamentosCliente,
 
 
-                // =========================================
-                // CARREGAMENTO
-                // =========================================
+            // =========================================
+            // AGENDAMENTOS DO CLIENTE
+            // =========================================
 
-                carregandoAgendamentos,
+            agendamentosCliente,
+            
+            carregarAgendamentosPorPeriodo,
 
+            adicionarAgendamentoCliente,
 
-                // =========================================
-                // CLIENTE
-                // =========================================
+            removerAgendamentoCliente,
 
-                clienteId,
-
-                definirClienteId,
-
-
-                // =========================================
-                // DATA VISUALIZADA
-                // =========================================
-
-                dataVisualizada,
-
-                definirDataVisualizada,
-
-                proximoDia,
-
-                diaAnterior,
-
-                proximaSemana,
-
-                semanaAnterior,
-
-                proximoMes,
-
-                mesAnterior,
+            carregarAgendamentosCliente,
 
 
-                // =========================================
-                // DATA DO AGENDAMENTO
-                // =========================================
+            // =========================================
+            // CARREGAMENTO
+            // =========================================
 
-                dataAgendamento,
+            carregandoAgendamentos,
 
-                definirDataAgendamento,
-
-
-                // =========================================
-                // HORÁRIO
-                // =========================================
-
-                horarioSelecionado,
-
-                selecionarHorario,
+            isLoading, // <- ADICIONAR ESTA LINHA
 
 
-                // =========================================
-                // INTERFACE
-                // =========================================
+            // =========================================
+            // CLIENTE
+            // =========================================
 
-                interfaceView,
+            clienteId,
 
-                setInterfaceView
+            definirClienteId,
 
-            }}
-        >
 
-            {children}
+            // =========================================
+            // DATA VISUALIZADA
+            // =========================================
 
-        </CentralDadosContext.Provider>
+            dataVisualizada,
 
-    )
+            definirDataVisualizada,
+
+            proximoDia,
+
+            diaAnterior,
+
+            proximaSemana,
+
+            semanaAnterior,
+
+            proximoMes,
+
+            mesAnterior,
+
+
+            // =========================================
+            // DATA DO AGENDAMENTO
+            // =========================================
+
+            dataAgendamento,
+
+            definirDataAgendamento,
+
+
+            // =========================================
+            // HORÁRIO
+            // =========================================
+
+            horarioSelecionado,
+
+            selecionarHorario,
+
+
+            // =========================================
+            // INTERFACE
+            // =========================================
+
+            interfaceView,
+
+            setInterfaceView
+
+        }}
+    >
+
+        {children}
+
+    </CentralDadosContext.Provider>
+
+)
 
 }
 
@@ -1698,7 +1700,6 @@ export function useAgendamentos() {
     const context =
         useCentralDados()
 
-
     return {
 
         agendamentos:
@@ -1710,7 +1711,7 @@ export function useAgendamentos() {
         removerAgendamento:
             context.removerAgendamento,
 
-      carregarAgendamentosPorPeriodo:   
+        carregarAgendamentosPorPeriodo:   
             context.carregarAgendamentosPorPeriodo,
             
         agendamentosCliente:
@@ -1726,7 +1727,11 @@ export function useAgendamentos() {
             context.carregarAgendamentosCliente,
 
         carregandoAgendamentos:
-            context.carregandoAgendamentos
+            context.carregandoAgendamentos,
+
+        // NOVO: ADICIONAR ESTA LINHA
+        isLoading:
+            context.isLoading
 
     }
 

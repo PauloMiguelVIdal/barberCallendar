@@ -1,4 +1,3 @@
-
 'use client'
 
 import {
@@ -48,7 +47,8 @@ export default function Callendar() {
   // =========================================================
 
   const {
-    agendamentos
+    agendamentos,
+    isLoading
   } = useAgendamentos()
 
 
@@ -94,6 +94,16 @@ const TEMPO_TOLERANCIA = 20
 
   const anoVisualizado =
     dataVisualizada.getFullYear()
+
+  // =========================================================
+  // VERIFICAR SE É SÁBADO
+  // =========================================================
+
+  const diaDaSemana =
+    dataVisualizada.getDay() // 0 = Domingo, 6 = Sábado
+
+  const ehSabado =
+    diaDaSemana === 6
 
 
   // =========================================================
@@ -191,6 +201,11 @@ const TEMPO_TOLERANCIA = 20
   function horarioEstaOcupado(
     horarioVerificado: string
   ) {
+
+    // Se for sábado, todos os horários estão "ocupados" (indisponíveis)
+    if (ehSabado) {
+      return true
+    }
 
     const minutoVerificado =
       horarioParaMinutos(
@@ -323,6 +338,12 @@ const agendamentosFormulario =
 
     }
 
+
+    // Não abrir modal se for sábado
+    if (ehSabado) {
+      selecionarHorario(null)
+      return
+    }
 
     const horarioExiste =
       horarios.some(
@@ -457,6 +478,20 @@ const agendamentosFormulario =
 
   ]
 
+  // =========================================================
+  // NOME DOS DIAS DA SEMANA
+  // =========================================================
+
+  const diasSemana = [
+    'Domingo',
+    'Segunda',
+    'Terça',
+    'Quarta',
+    'Quinta',
+    'Sexta',
+    'Sábado'
+  ]
+
 
   // =========================================================
   // RENDER
@@ -538,20 +573,42 @@ const agendamentosFormulario =
             DATA
         ================================================== */}
 
-        <h1
-          className="
-            text-[25px]
-            text-[#FFFFFF]
-            text-center
-            font-bold
-          "
-        >
+        <div className="text-center">
 
-          {diaVisualizado}/
-          {mesVisualizado + 1}/
-          {anoVisualizado}
+          <h1
+            className="
+              text-[25px]
+              text-[#FFFFFF]
+              text-center
+              font-bold
+            "
+          >
 
-        </h1>
+            {diaVisualizado}/
+            {mesVisualizado + 1}/
+            {anoVisualizado}
+
+          </h1>
+
+          {/* =================================================
+              DIA DA SEMANA
+          ================================================== */}
+
+          <p
+            className={`
+              text-sm
+              mt-1
+              ${
+                ehSabado
+                  ? 'text-[#FF6B6B]'
+                  : 'text-[#AAAAAA]'
+              }
+            `}
+          >
+            {diasSemana[diaDaSemana]}
+          </p>
+
+        </div>
 
 
         {/* =================================================
@@ -587,6 +644,49 @@ const agendamentosFormulario =
 
 
       {/* =====================================================
+          MENSAGEM DE SÁBADO
+      ====================================================== */}
+
+      {ehSabado && (
+
+        <div
+          className="
+            w-full
+            p-6
+            mb-4
+            bg-[#2A1A1A]
+            border-2
+            border-[#FF6B6B]
+            rounded-lg
+            text-center
+          "
+        >
+
+          <p
+            className="
+              text-[#FF6B6B]
+              text-lg
+              font-bold
+            "
+          >
+            ⚠️ ATENÇÃO: AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS
+          </p>
+
+          <p
+            className="
+              text-[#E0E0E0]
+              mt-2
+            "
+          >
+            O atendimento é realizado por ordem de chegada.
+          </p>
+
+        </div>
+
+      )}
+
+
+      {/* =====================================================
           LISTA DE HORÁRIOS
       ====================================================== */}
 
@@ -605,153 +705,238 @@ const agendamentosFormulario =
         "
       >
 
-        {horarios.map(
+        {/* =====================================================
+            ANIMAÇÃO DE CARREGAMENTO
+        ====================================================== */}
 
-          horario => {
+        {isLoading ? (
 
-            // =================================================
-            // VERIFICAR OCUPAÇÃO
-            // =================================================
+          <div
+            className="
+              w-full
+              flex
+              flex-col
+              items-center
+              justify-center
+              py-12
+              gap-4
+            "
+          >
 
-            const ocupado =
-              horarioEstaOcupado(
-                horario.hora
+            {/* Spinner */}
+            <div
+              className="
+                w-12
+                h-12
+                border-4
+                border-[#D3AF37]
+                border-t-transparent
+                rounded-full
+                animate-spin
+              "
+            />
+
+            <p
+              className="
+                text-[#A0A0A0]
+                text-sm
+                animate-pulse
+              "
+            >
+              Carregando agendamentos...
+            </p>
+
+            {/* Skeleton dos horários */}
+            <div
+              className="
+                w-full
+                max-w-[500px]
+                flex
+                flex-col
+                gap-2
+                mt-4
+              "
+            >
+
+              {[...Array(6)].map((_, index) => (
+
+                <div
+                  key={index}
+                  className="
+                    w-full
+                    h-[52px]
+                    bg-[#1E1E1E]
+                    rounded-lg
+                    animate-pulse
+                    border
+                    border-[#2A2A2A]
+                  "
+                />
+
+              ))}
+
+            </div>
+
+          </div>
+
+        ) : (
+
+          // =====================================================
+          // LISTA DE HORÁRIOS
+          // =====================================================
+
+          horarios.map(
+
+            horario => {
+
+              // =================================================
+              // VERIFICAR OCUPAÇÃO
+              // =================================================
+
+              const ocupado =
+                horarioEstaOcupado(
+                  horario.hora
+                )
+
+
+              // =================================================
+              // HORÁRIO COM ESTADO ATUALIZADO
+              // =================================================
+
+              const horarioComEstado:
+                horarioType = {
+
+                ...horario,
+
+                ocupado
+
+              }
+
+
+              return (
+
+                <div
+                  key={horario.hora}
+                  className="w-full"
+                >
+
+                  <button
+
+                    onClick={() => {
+
+                      // =================================================
+                      // IMPEDIR HORÁRIO OCUPADO OU SÁBADO
+                      // =================================================
+
+                      if (
+                        ocupado ||
+                        ehSabado
+                      ) {
+
+                        return
+
+                      }
+
+
+                      // =================================================
+                      // SELECIONAR HORÁRIO
+                      // =================================================
+
+                      selecionarHorario(
+                        horario.hora
+                      )
+
+
+                      // =================================================
+                      // ABRIR FORMULÁRIO
+                      // =================================================
+
+                      setModalAgendamento(
+                        true
+                      )
+
+                    }}
+
+                    className={`
+                      w-full
+                      py-3
+                      px-4
+                      rounded-lg
+                      text-left
+                      transition-colors
+                      border-2
+
+                      ${
+                        ocupado || ehSabado
+
+                          ? `
+                            bg-[#333333]
+                            text-[#757575]
+                            border-[#333333]
+                            cursor-not-allowed
+                          `
+
+                          : `
+                            bg-[#000000]
+                            text-[#D3AF37]
+                            border-[#D3AF37]
+                            hover:bg-[#2A2A2A]
+                          `
+                      }
+                    `}
+
+                  >
+
+                    <div
+                      className="
+                        flex
+                        justify-between
+                        items-center
+                      "
+                    >
+
+                      <span
+                        className={
+                          ocupado || ehSabado
+                            ? ''
+                            : 'text-[#D3AF37]'
+                        }
+                      >
+                        {horario.hora}
+                      </span>
+
+
+                      <span
+                        className={`
+                          text-sm
+
+                          ${
+                            ocupado || ehSabado
+                              ? 'text-[#757575]'
+                              : 'text-[#FFFFFF]'
+                          }
+                        `}
+                      >
+                        {
+                          ehSabado
+                            ? 'indisponível'
+                            : ocupado
+                              ? 'ocupado'
+                              : 'livre'
+                        }
+                      </span>
+
+                    </div>
+
+                  </button>
+
+                </div>
+
               )
-
-
-            // =================================================
-            // HORÁRIO COM ESTADO ATUALIZADO
-            // =================================================
-
-            const horarioComEstado:
-              horarioType = {
-
-              ...horario,
-
-              ocupado
 
             }
 
-
-            return (
-
-              <div
-                key={horario.hora}
-                className="w-full"
-              >
-
-                <button
-
-                  onClick={() => {
-
-                    // =================================================
-                    // IMPEDIR HORÁRIO OCUPADO
-                    // =================================================
-
-                    if (
-                      ocupado
-                    ) {
-
-                      return
-
-                    }
-
-
-                    // =================================================
-                    // SELECIONAR HORÁRIO
-                    // =================================================
-
-                    selecionarHorario(
-                      horario.hora
-                    )
-
-
-                    // =================================================
-                    // ABRIR FORMULÁRIO
-                    // =================================================
-
-                    setModalAgendamento(
-                      true
-                    )
-
-                  }}
-
-                  className={`
-                    w-full
-                    py-3
-                    px-4
-                    rounded-lg
-                    text-left
-                    transition-colors
-                    border-2
-
-                    ${
-                      ocupado
-
-                        ? `
-                          bg-[#333333]
-                          text-[#757575]
-                          border-[#333333]
-                          cursor-not-allowed
-                        `
-
-                        : `
-                          bg-[#000000]
-                          text-[#D3AF37]
-                          border-[#D3AF37]
-                          hover:bg-[#2A2A2A]
-                        `
-                    }
-                  `}
-
-                >
-
-                  <div
-                    className="
-                      flex
-                      justify-between
-                      items-center
-                    "
-                  >
-
-                    <span
-                      className={
-                        ocupado
-                          ? ''
-                          : 'text-[#D3AF37]'
-                      }
-                    >
-                      {horario.hora}
-                    </span>
-
-
-                    <span
-                      className={`
-                        text-sm
-
-                        ${
-                          ocupado
-                            ? 'text-[#757575]'
-                            : 'text-[#FFFFFF]'
-                        }
-                      `}
-                    >
-                      {
-                        ocupado
-                          ? 'ocupado'
-                          : 'livre'
-                      }
-                    </span>
-
-                  </div>
-
-                </button>
-
-              </div>
-
-            )
-
-          }
+          )
 
         )}
 
@@ -763,6 +948,8 @@ const agendamentosFormulario =
         {
           modalAgendamento &&
           horarioSelecionado &&
+          !ehSabado &&
+          !isLoading &&
 
           (
 
@@ -798,4 +985,3 @@ agendamentos={agendamentosFormulario}
   )
 
 }
-
