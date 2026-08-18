@@ -102,6 +102,7 @@ export const InstagramIcon = ({ size = 24, color = "currentColor", ...props }) =
 );
 
 
+
 // =========================================================
 // COMPONENTE
 // =========================================================
@@ -446,284 +447,18 @@ export default function Appointments() {
 
 
     // =========================================================
-    // CARREGANDO INICIAL
+    // RENDERIZAR PAINEL DE CONTATO (PIX, WHATSAPP, MAPS, INSTAGRAM)
     // =========================================================
 
-    if (
-
-        carregandoAgendamentosCliente &&
-
-        agendamentosOrdenados.length === 0
-
-    ) {
+    function renderizarPainelContato() {
 
         return (
-
-            <div className="
-                w-full
-                min-h-full
-                flex
-                flex-col
-                items-center
-                justify-center
-                gap-4
-                bg-[#121212]
-                text-[#E0E0E0]
-                p-4
-                rounded-xl
-            ">
-
-                <Loader2
-                    size={40}
-                    className="
-                        text-[#D3AF37]
-                        animate-spin
-                    "
-                />
-
-                <p className="
-                    text-sm
-                    text-[#A0A0A0]
-                ">
-
-                    Carregando seus agendamentos...
-
-                </p>
-
-            </div>
-
-        )
-
-    }
-
-
-    // =========================================================
-    // SEM AGENDAMENTOS
-    // =========================================================
-
-    if (
-
-        agendamentosOrdenados.length === 0
-
-    ) {
-
-        return (
-
-            <div className="
-                w-full
-                min-h-full
-                flex
-                flex-col
-                items-center
-                justify-center
-                gap-6
-                bg-[#121212]
-                text-[#E0E0E0]
-                p-4
-                rounded-xl
-            ">
-
-                <div className="
-                    w-[80px]
-                    aspect-square
-                    rounded-full
-                    bg-[#1E1E1E]
-                    flex
-                    items-center
-                    justify-center
-                    border-2
-                    border-[#D3AF37]
-                ">
-
-                    <CalendarCheck
-                        color="#D3AF37"
-                        size={40}
-                    />
-
-                </div>
-
-
-                <div className="
-                    flex
-                    flex-col
-                    items-center
-                    gap-2
-                    text-center
-                ">
-
-                    <h2 className="
-                        text-xl
-                        font-bold
-                        text-[#FFFFFF]
-                    ">
-
-                        Nenhum agendamento
-
-                    </h2>
-
-
-                    <p className="
-                        text-sm
-                        text-[#A0A0A0]
-                    ">
-
-                        Você ainda não possui
-                        nenhum horário agendado.
-
-                    </p>
-
-                </div>
-
-
-                <button
-
-                    type="button"
-
-                    onClick={() =>
-                        setInterfaceView(
-                            'day'
-                        )
-                    }
-
-                    className="
-                        bg-[#D3AF37]
-                        text-[#121212]
-                        px-6
-                        py-3
-                        rounded-xl
-                        font-bold
-                        flex
-                        items-center
-                        gap-2
-                        hover:bg-[#C4A032]
-                        transition-all
-                        duration-200
-                        hover:scale-105
-                    "
-
-                >
-
-                    <ArrowLeft
-                        size={18}
-                    />
-
-                    Voltar para o calendário
-
-                </button>
-
-            </div>
-
-        )
-
-    }
-
-
-    // =========================================================
-    // RENDER
-    // =========================================================
-
-    return (
-
-        <div className="
-            w-full
-            flex
-            flex-col
-            gap-5
-            bg-[#121212]
-            p-4
-            rounded-xl
-            text-[#E0E0E0]
-        ">
-
-
-            {/* =================================================
-                CABEÇALHO
-            ================================================= */}
-
-            <div className="
-                flex
-                items-center
-                justify-between
-                border-b
-                border-[#2A2A2A]
-                pb-4
-            ">
-
-                <div className="
-                    flex
-                    flex-col
-                    gap-1
-                ">
-
-                    <h1 className="
-                        text-2xl
-                        font-bold
-                        text-[#FFFFFF]
-                    ">
-
-                        Meus agendamentos
-
-                    </h1>
-
-
-                    <p className="
-                        text-sm
-                        text-[#A0A0A0]
-                    ">
-
-                        Horários reservados neste dispositivo
-
-                    </p>
-
-                </div>
-
-
-                <CalendarCheck
-                    size={30}
-                    color="#D3AF37"
-                />
-
-            </div>
-
-
-            {/* =================================================
-                INDICADOR DE ATUALIZAÇÃO
-            ================================================= */}
-
-            {carregandoAgendamentosCliente && (
-
-                <div className="
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                    text-xs
-                    text-[#A0A0A0]
-                ">
-
-                    <Loader2
-                        size={14}
-                        className="
-                            animate-spin
-                            text-[#D3AF37]
-                        "
-                    />
-
-                    Atualizando agendamentos...
-
-                </div>
-
-            )}
-
-
-            {/* =================================================
-                BOTÕES DE CONTATO E INFORMAÇÕES
-            ================================================= */}
 
             <div className="
                 grid
                 grid-cols-2
                 gap-3
+                w-full
             ">
 
                 {/* PIX */}
@@ -978,9 +713,366 @@ export default function Appointments() {
 
             </div>
 
+        )
+
+    }
+
+
+    // =========================================================
+    // CARREGANDO INICIAL
+    // =========================================================
+
+    if (
+
+        carregandoAgendamentosCliente &&
+
+        agendamentosOrdenados.length === 0
+
+    ) {
+
+        return (
+
+            <div className="
+                w-full
+                min-h-full
+                flex
+                flex-col
+                items-center
+                justify-center
+                gap-6
+                bg-[#121212]
+                text-[#E0E0E0]
+                p-4
+                rounded-xl
+            ">
+
+                <Loader2
+                    size={40}
+                    className="
+                        text-[#D3AF37]
+                        animate-spin
+                    "
+                />
+
+                <p className="
+                    text-sm
+                    text-[#A0A0A0]
+                ">
+
+                    Carregando seus agendamentos...
+
+                </p>
+
+            </div>
+
+        )
+
+    }
+
+
+    // =========================================================
+    // SEM AGENDAMENTOS (MANTÉM O PAINEL DE CONTATO)
+    // =========================================================
+
+    if (
+
+        agendamentosOrdenados.length === 0
+
+    ) {
+
+        return (
+
+            <div className="
+                w-full
+                flex
+                flex-col
+                gap-5
+                bg-[#121212]
+                p-4
+                rounded-xl
+                text-[#E0E0E0]
+            ">
+
+                {/* =============================================
+                    CABEÇALHO
+                ============================================= */}
+
+                <div className="
+                    flex
+                    items-center
+                    justify-between
+                    border-b
+                    border-[#2A2A2A]
+                    pb-4
+                ">
+
+                    <div className="
+                        flex
+                        flex-col
+                        gap-1
+                    ">
+
+                        <h1 className="
+                            text-2xl
+                            font-bold
+                            text-[#FFFFFF]
+                        ">
+
+                            Meus agendamentos
+
+                        </h1>
+
+
+                        <p className="
+                            text-sm
+                            text-[#A0A0A0]
+                        ">
+
+                            Horários reservados neste dispositivo
+
+                        </p>
+
+                    </div>
+
+
+                    <CalendarCheck
+                        size={30}
+                        color="#D3AF37"
+                    />
+
+                </div>
+
+
+                {/* =============================================
+                    PAINEL DE CONTATO (SEMPRE VISÍVEL)
+                ============================================= */}
+
+                {renderizarPainelContato()}
+
+
+                {/* =============================================
+                    MENSAGEM SEM AGENDAMENTOS
+                ============================================= */}
+
+                <div className="
+                    w-full
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    gap-6
+                    py-8
+                ">
+
+                    <div className="
+                        w-[80px]
+                        aspect-square
+                        rounded-full
+                        bg-[#1E1E1E]
+                        flex
+                        items-center
+                        justify-center
+                        border-2
+                        border-[#D3AF37]
+                    ">
+
+                        <CalendarCheck
+                            color="#D3AF37"
+                            size={40}
+                        />
+
+                    </div>
+
+
+                    <div className="
+                        flex
+                        flex-col
+                        items-center
+                        gap-2
+                        text-center
+                    ">
+
+                        <h2 className="
+                            text-xl
+                            font-bold
+                            text-[#FFFFFF]
+                        ">
+
+                            Nenhum agendamento
+
+                        </h2>
+
+
+                        <p className="
+                            text-sm
+                            text-[#A0A0A0]
+                        ">
+
+                            Você ainda não possui
+                            nenhum horário agendado.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {/* =============================================
+                    BOTÃO VOLTAR (ADICIONAL)
+                ============================================= */}
+
+                <button
+
+                    type="button"
+
+                    onClick={() =>
+                        setInterfaceView(
+                            'day'
+                        )
+                    }
+
+                    className="
+                        w-full
+                        bg-[#D3AF37]
+                        text-[#121212]
+                        p-4
+                        rounded-xl
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                        font-bold
+                        hover:bg-[#C4A032]
+                        transition-all
+                        duration-200
+                        hover:scale-[1.02]
+                    "
+
+                >
+
+                    <ArrowLeft
+                        size={20}
+                    />
+
+                    Voltar para o calendário
+
+                </button>
+
+            </div>
+
+        )
+
+    }
+
+
+    // =========================================================
+    // RENDER (COM AGENDAMENTOS)
+    // =========================================================
+
+    return (
+
+        <div className="
+            w-full
+            flex
+            flex-col
+            gap-5
+            bg-[#121212]
+            p-4
+            rounded-xl
+            text-[#E0E0E0]
+        ">
+
 
             {/* =================================================
-                LISTA
+                CABEÇALHO
+            ================================================= */}
+
+            <div className="
+                flex
+                items-center
+                justify-between
+                border-b
+                border-[#2A2A2A]
+                pb-4
+            ">
+
+                <div className="
+                    flex
+                    flex-col
+                    gap-1
+                ">
+
+                    <h1 className="
+                        text-2xl
+                        font-bold
+                        text-[#FFFFFF]
+                    ">
+
+                        Meus agendamentos
+
+                    </h1>
+
+
+                    <p className="
+                        text-sm
+                        text-[#A0A0A0]
+                    ">
+
+                        Horários reservados neste dispositivo
+
+                    </p>
+
+                </div>
+
+
+                <CalendarCheck
+                    size={30}
+                    color="#D3AF37"
+                />
+
+            </div>
+
+
+            {/* =================================================
+                INDICADOR DE ATUALIZAÇÃO
+            ================================================= */}
+
+            {carregandoAgendamentosCliente && (
+
+                <div className="
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    text-xs
+                    text-[#A0A0A0]
+                ">
+
+                    <Loader2
+                        size={14}
+                        className="
+                            animate-spin
+                            text-[#D3AF37]
+                        "
+                    />
+
+                    Atualizando agendamentos...
+
+                </div>
+
+            )}
+
+
+            {/* =================================================
+                PAINEL DE CONTATO (SEMPRE VISÍVEL)
+            ================================================= */}
+
+            {renderizarPainelContato()}
+
+
+            {/* =================================================
+                LISTA DE AGENDAMENTOS
             ================================================= */}
 
             <div className="
