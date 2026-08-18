@@ -16,7 +16,11 @@ import {
     Phone,
     ArrowLeft,
     X,
-    Loader2
+    Loader2,
+    Copy,
+    Check,
+    MapPin,
+    CreditCard
 } from 'lucide-react'
 
 import {
@@ -56,6 +60,46 @@ type AgendamentoExibicao = {
         valor: number
     }[]
 }
+
+
+// =========================================================
+// CONFIGURAÇÕES DA BARBEARIA
+// =========================================================
+
+const CONFIG_BARBEARIA = {
+    // PIX
+    pixKey: '61002185000168', // Substitua pelo número do PIX
+    
+    // WhatsApp
+    whatsappNumber: '5517997415764', // Código do país + DDD + número sem espaços
+    whatsappMessage: 'Olá! Gostaria de agendar um horário na Brave Boss.',
+    
+    // Google Maps
+    mapsUrl: 'https://maps.app.goo.gl/EWoK6PZV4JxJjWvHA', // Substitua pelo endereço
+    
+    // Instagram
+    instagramUrl: 'https://www.instagram.com/barbeariabraveboss?igsh=N2Y1MXRmMDIzdWZk', // Substitua pelo perfil
+}
+
+
+export const InstagramIcon = ({ size = 24, color = "currentColor", ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
 
 
 // =========================================================
@@ -105,6 +149,16 @@ export default function Appointments() {
 
 
     // =========================================================
+    // ESTADO PARA COPIAR PIX
+    // =========================================================
+
+    const [
+        pixCopiado,
+        setPixCopiado
+    ] = useState(false)
+
+
+    // =========================================================
     // FORMATAR DATA
     // =========================================================
 
@@ -150,6 +204,85 @@ export default function Appointments() {
         return horario.slice(
             0,
             5
+        )
+
+    }
+
+
+    // =========================================================
+    // COPIAR PIX
+    // =========================================================
+
+    async function copiarPix() {
+
+        try {
+
+            await navigator.clipboard.writeText(
+                CONFIG_BARBEARIA.pixKey
+            )
+
+            setPixCopiado(true)
+
+            setTimeout(() => {
+
+                setPixCopiado(false)
+
+            }, 3000)
+
+        } catch (error) {
+
+            console.error(
+                'Erro ao copiar PIX:',
+                error
+            )
+
+        }
+
+    }
+
+
+    // =========================================================
+    // ABRIR WHATSAPP
+    // =========================================================
+
+    function abrirWhatsApp() {
+
+        const url =
+            `https://wa.me/${CONFIG_BARBEARIA.whatsappNumber}?text=${encodeURIComponent(
+                CONFIG_BARBEARIA.whatsappMessage
+            )}`
+
+        window.open(
+            url,
+            '_blank'
+        )
+
+    }
+
+
+    // =========================================================
+    // ABRIR GOOGLE MAPS
+    // =========================================================
+
+    function abrirGoogleMaps() {
+
+        window.open(
+            CONFIG_BARBEARIA.mapsUrl,
+            '_blank'
+        )
+
+    }
+
+
+    // =========================================================
+    // ABRIR INSTAGRAM
+    // =========================================================
+
+    function abrirInstagram() {
+
+        window.open(
+            CONFIG_BARBEARIA.instagramUrl,
+            '_blank'
         )
 
     }
@@ -581,6 +714,269 @@ export default function Appointments() {
                 </div>
 
             )}
+
+
+            {/* =================================================
+                BOTÕES DE CONTATO E INFORMAÇÕES
+            ================================================= */}
+
+            <div className="
+                grid
+                grid-cols-2
+                gap-3
+            ">
+
+                {/* PIX */}
+                <div className="
+                    col-span-2
+                    bg-[#1E1E1E]
+                    border
+                    border-[#2A2A2A]
+                    rounded-2xl
+                    p-4
+                    flex
+                    items-center
+                    justify-between
+                    gap-3
+                    hover:border-[#D3AF37]
+                    transition-all
+                    duration-200
+                ">
+
+                    <div className="
+                        flex
+                        items-center
+                        gap-3
+                        flex-1
+                        min-w-0
+                    ">
+
+                        <div className="
+                            w-[40px]
+                            h-[40px]
+                            rounded-xl
+                            bg-[#2A2A2A]
+                            flex
+                            items-center
+                            justify-center
+                            border
+                            border-[#D3AF37]
+                            shrink-0
+                        ">
+
+                            <CreditCard
+                                color="#D3AF37"
+                                size={20}
+                            />
+
+                        </div>
+
+                        <div className="
+                            flex
+                            flex-col
+                            gap-0.5
+                            min-w-0
+                        ">
+
+                            <span className="
+                                text-xs
+                                text-[#A0A0A0]
+                            ">
+
+                                PIX
+
+                            </span>
+
+                            <span className="
+                                text-sm
+                                font-mono
+                                text-[#E0E0E0]
+                                truncate
+                            ">
+
+                                {CONFIG_BARBEARIA.pixKey}
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <button
+
+                        type="button"
+
+                        onClick={copiarPix}
+
+                        className={`
+                            w-[40px]
+                            h-[40px]
+                            rounded-xl
+                            flex
+                            items-center
+                            justify-center
+                            transition-all
+                            duration-200
+                            shrink-0
+                            ${
+                                pixCopiado
+                                    ? 'bg-[#2E7D32] border border-[#4CAF50]'
+                                    : 'bg-[#D3AF37] hover:bg-[#C4A032]'
+                            }
+                        `}
+
+                    >
+
+                        {pixCopiado ? (
+
+                            <Check
+                                size={20}
+                                color="#FFFFFF"
+                            />
+
+                        ) : (
+
+                            <Copy
+                                size={20}
+                                color="#121212"
+                            />
+
+                        )}
+
+                    </button>
+
+                </div>
+
+                {/* WhatsApp */}
+                <button
+
+                    type="button"
+
+                    onClick={abrirWhatsApp}
+
+                    className="
+                        bg-[#1E1E1E]
+                        border
+                        border-[#2A2A2A]
+                        rounded-2xl
+                        p-4
+                        flex
+                        flex-col
+                        items-center
+                        justify-center
+                        gap-2
+                        hover:border-[#25D366]
+                        hover:bg-[#1A2A1A]
+                        transition-all
+                        duration-200
+                    "
+
+                >
+
+                    <Phone
+                        size={24}
+                        color="#25D366"
+                    />
+
+                    <span className="
+                        text-xs
+                        font-semibold
+                        text-[#E0E0E0]
+                    ">
+
+                        WhatsApp
+
+                    </span>
+
+                </button>
+
+                {/* Google Maps */}
+                <button
+
+                    type="button"
+
+                    onClick={abrirGoogleMaps}
+
+                    className="
+                        bg-[#1E1E1E]
+                        border
+                        border-[#2A2A2A]
+                        rounded-2xl
+                        p-4
+                        flex
+                        flex-col
+                        items-center
+                        justify-center
+                        gap-2
+                        hover:border-[#EA4335]
+                        hover:bg-[#2A1A1A]
+                        transition-all
+                        duration-200
+                    "
+
+                >
+
+                    <MapPin
+                        size={24}
+                        color="#EA4335"
+                    />
+
+                    <span className="
+                        text-xs
+                        font-semibold
+                        text-[#E0E0E0]
+                    ">
+
+                        Localização
+
+                    </span>
+
+                </button>
+
+                {/* Instagram */}
+                <button
+
+                    type="button"
+
+                    onClick={abrirInstagram}
+
+                    className="
+                        col-span-2
+                        bg-[#1E1E1E]
+                        border
+                        border-[#2A2A2A]
+                        rounded-2xl
+                        p-4
+                        flex
+                        items-center
+                        justify-center
+                        gap-3
+                        hover:border-[#E4405F]
+                        hover:bg-[#2A1A1E]
+                        transition-all
+                        duration-200
+                    "
+
+                >
+
+                    <InstagramIcon
+                        size={24}
+                        color="#E4405F"
+                    />
+
+                    <span className="
+                        text-sm
+                        font-semibold
+                        text-[#E0E0E0]
+                    ">
+
+                        Siga-nos no Instagram
+
+                    </span>
+
+                </button>
+
+            </div>
 
 
             {/* =================================================
