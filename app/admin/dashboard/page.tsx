@@ -38,7 +38,7 @@ export default function AdminDashboard() {
                 </p>
                 <div className="bg-[#1E1E1E] p-4 rounded-lg border border-[#2A2A2A] mb-4">
                     <p><strong>Usuário:</strong> {profile?.nome}</p>
-                    <p><strong>Email:</strong> {profile?.email}</p>
+                    {/* <p><strong>Email:</strong> {profile?.email}</p> */}
                     <p><strong>Role:</strong> {profile?.role}</p>
                 </div>
                 <button
