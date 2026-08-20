@@ -5,6 +5,12 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../context/AuthContext'
 import Callendar from '@/app/components/Callendar'
+
+import {
+  CentralDadosProvider,
+  useCentralDados
+} from "../../context/PersistData"
+
 export default function Dashboard() {
     const router = useRouter()
     const { isAuthenticated, isLoading, profile, logout } = useAuth()
@@ -53,7 +59,10 @@ export default function Dashboard() {
                 
                 {/* Aqui você pode adicionar o Callendar depois */}
             <div className="max-w-7xl mx-auto p-4">
+                    <CentralDadosProvider>
+                
                 <Callendar />
+                </CentralDadosProvider>
             </div>
             </div>
         </div>
