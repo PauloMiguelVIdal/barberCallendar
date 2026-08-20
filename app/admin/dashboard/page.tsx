@@ -1,14 +1,13 @@
-// app/admin/dashboard/page.tsx (versão simplificada para teste)
 'use client'
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../context/AuthContext'
-import Callendar from '@/app/components/Callendar'
+import CallendarAdmin from '@/app/components/CallendarAdmin'
+import { LogOut, User as UserIcon } from 'lucide-react'
 
 import {
-  CentralDadosProvider,
-  useCentralDados
+    CentralDadosProvider
 } from "../../context/PersistData"
 
 export default function Dashboard() {
@@ -34,36 +33,43 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-[#121212] text-white p-8">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-[#D3AF37] mb-4">
-                    ✅ Dashboard Admin
-                </h1>
-                <p className="text-gray-400 mb-4">
-                    Autenticação funcionando corretamente!
-                </p>
-                <div className="bg-[#1E1E1E] p-4 rounded-lg border border-[#2A2A2A] mb-4">
-                    <p><strong>Usuário:</strong> {profile?.nome}</p>
-                    {/* <p><strong>Email:</strong> {profile?.email}</p> */}
-                    <p><strong>Role:</strong> {profile?.role}</p>
+        <div className="min-h-screen bg-[#121212]">
+            {/* Barra superior do Admin */}
+            <div className="bg-[#1E1E1E] border-b border-[#2A2A2A] p-4 sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-[#D3AF37] font-bold text-lg">
+                            📊 Painel Administrativo
+                        </h1>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 bg-[#2A2A2A] rounded-lg px-3 py-2">
+                            <UserIcon size={16} color="#D3AF37" />
+                            <span className="text-sm text-[#E0E0E0]">
+                                {profile?.nome || 'Barbeiro'} • {profile?.role || 'role'}
+                            </span>
+                        </div>
+
+                        <button
+                            onClick={async () => {
+                                await logout()
+                                router.push('/admin')
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D32F2F]/20 text-[#FF6B6B] hover:bg-[#D32F2F]/30 transition-colors text-sm font-medium"
+                        >
+                            <LogOut size={16} />
+                            <span className="hidden sm:inline">Sair</span>
+                        </button>
+                    </div>
                 </div>
-                <button
-                    onClick={async () => {
-                        await logout()
-                        router.push('/admin')
-                    }}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                >
-                    Sair
-                </button>
-                
-                {/* Aqui você pode adicionar o Callendar depois */}
-            <div className="max-w-7xl mx-auto p-4">
-                    <CentralDadosProvider>
-                
-                <Callendar />
-                </CentralDadosProvider>
             </div>
+
+            {/* Conteúdo do Admin */}
+            <div className="max-w-7xl mx-auto">
+                <CentralDadosProvider>
+                    <CallendarAdmin />
+                </CentralDadosProvider>
             </div>
         </div>
     )
