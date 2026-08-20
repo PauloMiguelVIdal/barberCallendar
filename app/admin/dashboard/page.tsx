@@ -1,7 +1,7 @@
 // app/admin/dashboard/page.tsx
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../context/AuthContext'
 import Callendar from '../../components/Callendar'
@@ -10,6 +10,11 @@ import { LogOut, ArrowLeft, User as UserIcon } from 'lucide-react'
 export default function Dashboard() {
     const router = useRouter()
     const { isAuthenticated, isLoading, profile, logout } = useAuth()
+    const [isClient, setIsClient] = useState(false)
+
+    useEffect(() => {
+        setIsClient(true)
+    }, [])
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -17,7 +22,7 @@ export default function Dashboard() {
         }
     }, [isAuthenticated, isLoading, router])
 
-    if (isLoading) {
+    if (isLoading || !isClient) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-[#D3AF37] border-t-transparent rounded-full animate-spin" />
@@ -31,6 +36,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-[#121212]">
+            {/* Barra superior do Admin */}
             <div className="bg-[#1E1E1E] border-b border-[#2A2A2A] p-4 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
@@ -69,6 +75,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* Conteúdo do Admin */}
             <div className="max-w-7xl mx-auto p-4">
                 <Callendar />
             </div>
