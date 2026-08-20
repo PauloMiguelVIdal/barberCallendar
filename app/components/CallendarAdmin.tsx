@@ -1,3 +1,4 @@
+// components/CallendarAdmin.tsx (versão admin - com todos os recursos)
 'use client'
 
 import {
@@ -115,7 +116,18 @@ export default function CallendarAdmin() {
   const mesVisualizado = dataVisualizada.getMonth()
   const anoVisualizado = dataVisualizada.getFullYear()
   const diaDaSemana = dataVisualizada.getDay()
+  
+  // Verificar dias específicos
+  const ehDomingo = diaDaSemana === 0
+  const ehSegunda = diaDaSemana === 1
+  const ehSexta = diaDaSemana === 5
   const ehSabado = diaDaSemana === 6
+  
+  // Dias que a barbearia está fechada (Domingo e Segunda)
+  const estaFechada = ehDomingo || ehSegunda
+  
+  // Dias que é por ordem de chegada (Sexta e Sábado)
+  const ehOrdemChegada = ehSexta || ehSabado
 
   // =========================================================
   // HORÁRIOS DISPONÍVEIS
@@ -171,7 +183,8 @@ export default function CallendarAdmin() {
 
   function horarioEstaOcupado(horarioVerificado: string) {
 
-    if (ehSabado) {
+    // Se estiver fechado ou for ordem de chegada, todos os horários estão indisponíveis
+    if (estaFechada || ehOrdemChegada) {
       return true
     }
 
@@ -458,7 +471,13 @@ export default function CallendarAdmin() {
           <h1 className="text-[25px] text-[#FFFFFF] text-center font-bold">
             {diaVisualizado}/{mesVisualizado + 1}/{anoVisualizado}
           </h1>
-          <p className={`text-sm mt-1 ${ehSabado ? 'text-[#FF6B6B]' : 'text-[#AAAAAA]'}`}>
+          <p className={`text-sm mt-1 ${
+            estaFechada 
+              ? 'text-[#FF6B6B]' 
+              : ehOrdemChegada 
+                ? 'text-[#FFA500]' 
+                : 'text-[#AAAAAA]'
+          }`}>
             {diasSemana[diaDaSemana]}
           </p>
         </div>
@@ -474,21 +493,47 @@ export default function CallendarAdmin() {
       </div>
 
       {/* =====================================================
-          MENSAGEM DE SÁBADO
+          MENSAGEM DE FECHADO (DOMINGO E SEGUNDA)
       ====================================================== */}
 
-      {ehSabado && (
+      {estaFechada && (
         <div className="w-full p-6 mb-4 bg-[#2A1A1A] border-2 border-[#FF6B6B] rounded-lg text-center">
-          <p className="text-[#FF6B6B] text-lg font-bold">⚠️ ATENÇÃO: AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS</p>
-          <p className="text-[#E0E0E0] mt-2">O atendimento é realizado por ordem de chegada.</p>
+          <p className="text-[#FF6B6B] text-lg font-bold">🔒 BARBEARIA FECHADA</p>
+          <p className="text-[#E0E0E0] mt-2">
+            {ehDomingo 
+              ? 'Aos domingos não realizamos atendimento.' 
+              : 'Às segundas-feiras não realizamos atendimento.'}
+          </p>
+          <p className="text-[#A0A0A0] text-sm mt-1">
+            Retornamos com os atendimentos a partir de terça-feira.
+          </p>
         </div>
       )}
 
       {/* =====================================================
-          RESUMO FINANCEIRO
+          MENSAGEM DE ORDEM DE CHEGADA (SEXTA E SÁBADO)
       ====================================================== */}
 
-      {!isLoading && !carregandoAdmin && (
+      {ehOrdemChegada && (
+        <div className="w-full p-6 mb-4 bg-[#2A1A1A] border-2 border-[#FFA500] rounded-lg text-center">
+          <p className="text-[#FFA500] text-lg font-bold">⏰ ATENDIMENTO POR ORDEM DE CHEGADA</p>
+          <p className="text-[#E0E0E0] mt-2">
+            {ehSexta 
+              ? 'Às sextas-feiras o atendimento é realizado por ordem de chegada.' 
+              : 'Aos sábados o atendimento é realizado por ordem de chegada.'}
+          </p>
+          <p className="text-[#A0A0A0] text-sm mt-1">
+            Não é possível realizar agendamentos para este dia.
+            Chegue cedo para garantir seu horário!
+          </p>
+        </div>
+      )}
+
+      {/* =====================================================
+          RESUMO FINANCEIRO (apenas se não estiver fechado)
+      ====================================================== */}
+
+      {!isLoading && !carregandoAdmin && !estaFechada && !ehOrdemChegada && (
         <div className="w-full mb-6">
           <div className="
             bg-gradient-to-r from-[#1E1E1E] to-[#2A2A2A]
@@ -557,7 +602,8 @@ export default function CallendarAdmin() {
             {horarios.map(horario => {
               const agendamento = obterAgendamentoPorHorario(horario.hora)
               
-              if (!agendamento) return null
+              // Se estiver fechado ou ordem de chegada, não mostra agendamentos
+              if (estaFechada || ehOrdemChegada || !agendamento) return null
 
               // Busca os dados do cliente
               const clienteDB = dadosAdminMap[agendamento.cliente_id]
@@ -702,7 +748,7 @@ export default function CallendarAdmin() {
             }).filter(Boolean)}
 
             {/* Mensagem quando não há agendamentos */}
-            {!isLoading && horarios.every(h => !obterAgendamentoPorHorario(h.hora)) && (
+            {!isLoading && !estaFechada && !ehOrdemChegada && horarios.every(h => !obterAgendamentoPorHorario(h.hora)) && (
               <div className="w-full flex flex-col items-center justify-center py-12 gap-4 bg-[#1E1E1E] border border-[#2A2A2A] rounded-2xl">
                 <CalendarCheck size={40} color="#757575" />
                 <p className="text-sm text-[#A0A0A0]">Nenhum agendamento para este dia</p>
@@ -714,7 +760,7 @@ export default function CallendarAdmin() {
       </div>
 
       {/* =====================================================
-          MODAL CANCELAR (ADMIN)
+          MODAIS
       ====================================================== */}
       {modalEdicao && agendamentoEditando && (
         <FormularioEdicao

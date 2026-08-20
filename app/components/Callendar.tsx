@@ -79,7 +79,18 @@ export default function Callendar() {
   const mesVisualizado = dataVisualizada.getMonth()
   const anoVisualizado = dataVisualizada.getFullYear()
   const diaDaSemana = dataVisualizada.getDay()
+  
+  // Verificar dias específicos
+  const ehDomingo = diaDaSemana === 0
+  const ehSegunda = diaDaSemana === 1
+  const ehSexta = diaDaSemana === 5
   const ehSabado = diaDaSemana === 6
+  
+  // Dias que a barbearia está fechada (Domingo e Segunda)
+  const estaFechada = ehDomingo || ehSegunda
+  
+  // Dias que é por ordem de chegada (Sexta e Sábado)
+  const ehOrdemChegada = ehSexta || ehSabado
 
   // =========================================================
   // HORÁRIOS DISPONÍVEIS
@@ -129,7 +140,8 @@ export default function Callendar() {
 
   function horarioEstaOcupado(horarioVerificado: string) {
 
-    if (ehSabado) {
+    // Se estiver fechado ou for ordem de chegada, todos os horários estão indisponíveis
+    if (estaFechada || ehOrdemChegada) {
       return true
     }
 
@@ -170,7 +182,7 @@ export default function Callendar() {
       return
     }
 
-    if (ehSabado) {
+    if (estaFechada || ehOrdemChegada) {
       selecionarHorario(null)
       return
     }
@@ -183,7 +195,7 @@ export default function Callendar() {
 
     setModalAgendamento(true)
 
-  }, [horarioSelecionado, ehSabado])
+  }, [horarioSelecionado, estaFechada, ehOrdemChegada])
 
   // =========================================================
   // NOME DOS DIAS DA SEMANA
@@ -256,7 +268,13 @@ export default function Callendar() {
           <h1 className="text-[25px] text-[#FFFFFF] text-center font-bold">
             {diaVisualizado}/{mesVisualizado + 1}/{anoVisualizado}
           </h1>
-          <p className={`text-sm mt-1 ${ehSabado ? 'text-[#FF6B6B]' : 'text-[#AAAAAA]'}`}>
+          <p className={`text-sm mt-1 ${
+            estaFechada 
+              ? 'text-[#FF6B6B]' 
+              : ehOrdemChegada 
+                ? 'text-[#FFA500]' 
+                : 'text-[#AAAAAA]'
+          }`}>
             {diasSemana[diaDaSemana]}
           </p>
         </div>
@@ -272,13 +290,39 @@ export default function Callendar() {
       </div>
 
       {/* =====================================================
-          MENSAGEM DE SÁBADO
+          MENSAGEM DE FECHADO (DOMINGO E SEGUNDA)
       ====================================================== */}
 
-      {ehSabado && (
+      {estaFechada && (
         <div className="w-full p-6 mb-4 bg-[#2A1A1A] border-2 border-[#FF6B6B] rounded-lg text-center">
-          <p className="text-[#FF6B6B] text-lg font-bold">⚠️ ATENÇÃO: AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS</p>
-          <p className="text-[#E0E0E0] mt-2">O atendimento é realizado por ordem de chegada.</p>
+          <p className="text-[#FF6B6B] text-lg font-bold">🔒 BARBEARIA FECHADA</p>
+          <p className="text-[#E0E0E0] mt-2">
+            {ehDomingo 
+              ? 'Aos domingos não realizamos atendimento.' 
+              : 'Às segundas-feiras não realizamos atendimento.'}
+          </p>
+          <p className="text-[#A0A0A0] text-sm mt-1">
+            Retornamos com os atendimentos a partir de terça-feira.
+          </p>
+        </div>
+      )}
+
+      {/* =====================================================
+          MENSAGEM DE ORDEM DE CHEGADA (SEXTA E SÁBADO)
+      ====================================================== */}
+
+      {ehOrdemChegada && (
+        <div className="w-full p-6 mb-4 bg-[#2A1A1A] border-2 border-[#FFA500] rounded-lg text-center">
+          <p className="text-[#FFA500] text-lg font-bold">⏰ ATENDIMENTO POR ORDEM DE CHEGADA</p>
+          <p className="text-[#E0E0E0] mt-2">
+            {ehSexta 
+              ? 'Às sextas-feiras o atendimento é realizado por ordem de chegada.' 
+              : 'Aos sábados o atendimento é realizado por ordem de chegada.'}
+          </p>
+          <p className="text-[#A0A0A0] text-sm mt-1">
+            Não é possível realizar agendamentos para este dia.
+            Chegue cedo para garantir seu horário!
+          </p>
         </div>
       )}
 
@@ -300,11 +344,13 @@ export default function Callendar() {
         ) : (
           horarios.map(horario => {
             const ocupado = horarioEstaOcupado(horario.hora)
+            const indisponivel = estaFechada || ehOrdemChegada || ocupado
+            
             return (
               <div key={horario.hora} className="w-full">
                 <button
                   onClick={() => {
-                    if (ocupado || ehSabado) { return }
+                    if (indisponivel) { return }
                     selecionarHorario(horario.hora)
                     setModalAgendamento(true)
                   }}
@@ -316,18 +362,25 @@ export default function Callendar() {
                     text-left
                     transition-colors
                     border-2
-                    ${ocupado || ehSabado
+                    ${indisponivel
                       ? `bg-[#333333] text-[#757575] border-[#333333] cursor-not-allowed`
                       : `bg-[#000000] text-[#D3AF37] border-[#D3AF37] hover:bg-[#2A2A2A]`
                     }
                   `}
                 >
                   <div className="flex justify-between items-center">
-                    <span className={ocupado || ehSabado ? '' : 'text-[#D3AF37]'}>
+                    <span className={indisponivel ? '' : 'text-[#D3AF37]'}>
                       {horario.hora}
                     </span>
-                    <span className={`text-sm ${ocupado || ehSabado ? 'text-[#757575]' : 'text-[#FFFFFF]'}`}>
-                      {ehSabado ? 'indisponível' : ocupado ? 'ocupado' : 'livre'}
+                    <span className={`text-sm ${indisponivel ? 'text-[#757575]' : 'text-[#FFFFFF]'}`}>
+                      {estaFechada 
+                        ? 'fechado' 
+                        : ehOrdemChegada 
+                          ? 'ordem de chegada' 
+                          : ocupado 
+                            ? 'ocupado' 
+                            : 'livre'
+                      }
                     </span>
                   </div>
                 </button>
@@ -344,7 +397,8 @@ export default function Callendar() {
       {
         modalAgendamento &&
         horarioSelecionado &&
-        !ehSabado &&
+        !estaFechada &&
+        !ehOrdemChegada &&
         !isLoading && (
           <Formulario
             horario={horarioSelecionado}

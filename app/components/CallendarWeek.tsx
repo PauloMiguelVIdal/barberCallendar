@@ -1,3 +1,4 @@
+// components/CallendarWeek.tsx
 'use client'
 
 import { useEffect } from 'react'
@@ -48,7 +49,7 @@ export default function CallendarWeek() {
     const {
 
         agendamentos,
-carregarAgendamentosPorPeriodo   
+        carregarAgendamentosPorPeriodo
     } = useAgendamentos()
 
 
@@ -63,12 +64,6 @@ carregarAgendamentosPorPeriodo
 
     // =========================================================
     // LIMITE MÁXIMO DE AGENDAMENTO
-    // =========================================================
-    //
-    // O cliente pode agendar até 6 semanas a partir de hoje.
-    //
-    // 6 semanas = 42 dias
-    //
     // =========================================================
 
     const LIMITE_SEMANAS = 6
@@ -244,18 +239,35 @@ carregarAgendamentosPorPeriodo
 
 
     // =========================================================
-    // VERIFICAR SE DATA É SÁBADO
+    // VERIFICAR DIAS ESPECÍFICOS
     // =========================================================
 
-    function dataEhSabado(
-        data: Date
-    ) {
+    function getDiaSemana(data: Date) {
+        return data.getDay() // 0 = Domingo, 6 = Sábado
+    }
 
-        const diaDaSemana =
-            data.getDay() // 0 = Domingo, 6 = Sábado
+    function dataEhDomingo(data: Date) {
+        return getDiaSemana(data) === 0
+    }
 
-        return diaDaSemana === 6
+    function dataEhSegunda(data: Date) {
+        return getDiaSemana(data) === 1
+    }
 
+    function dataEhSexta(data: Date) {
+        return getDiaSemana(data) === 5
+    }
+
+    function dataEhSabado(data: Date) {
+        return getDiaSemana(data) === 6
+    }
+
+    function dataEstaFechada(data: Date) {
+        return dataEhDomingo(data) || dataEhSegunda(data)
+    }
+
+    function dataEhOrdemChegada(data: Date) {
+        return dataEhSexta(data) || dataEhSabado(data)
     }
 
 
@@ -273,7 +285,9 @@ carregarAgendamentosPorPeriodo
 
             dataEstaAlemDoLimite(data) ||
 
-            dataEhSabado(data)
+            dataEstaFechada(data) ||
+
+            dataEhOrdemChegada(data)
 
         )
 
@@ -357,8 +371,8 @@ carregarAgendamentosPorPeriodo
 
     ) {
 
-        // Se for sábado, todos os horários estão ocupados
-        if (dataEhSabado(dia)) {
+        // Se for sábado, ordem de chegada ou fechado, todos os horários estão ocupados
+        if (dataEstaFechada(dia) || dataEhOrdemChegada(dia)) {
             return true
         }
 
@@ -566,12 +580,29 @@ carregarAgendamentosPorPeriodo
 
 
         // =============================================
-        // DATA É SÁBADO
+        // DATA FECHADA (DOMINGO E SEGUNDA)
         // =============================================
 
         if (
 
-            dataEhSabado(
+            dataEstaFechada(
+                dia
+            )
+
+        ) {
+
+            return
+
+        }
+
+
+        // =============================================
+        // DATA ORDEM DE CHEGADA (SEXTA E SÁBADO)
+        // =============================================
+
+        if (
+
+            dataEhOrdemChegada(
                 dia
             )
 
@@ -686,7 +717,7 @@ carregarAgendamentosPorPeriodo
     const ultimoDia =
         diasSemana[6]
 
-        
+
     // =========================================================
     // BUSCAR AGENDAMENTOS DA SEMANA VISÍVEL
     // =========================================================
@@ -777,11 +808,6 @@ carregarAgendamentosPorPeriodo
 
     // =========================================================
     // VERIFICAR LIMITE DA PRÓXIMA SEMANA
-    // =========================================================
-    //
-    // Se o primeiro dia da próxima semana já estiver depois
-    // do limite máximo, não permitimos avançar.
-    //
     // =========================================================
 
     const proximaSemanaUltrapassaLimite =
@@ -997,30 +1023,34 @@ carregarAgendamentosPorPeriodo
 
 
             {/* =====================================================
-                LEGENDA DE SÁBADO
+                MENSAGENS DE STATUS
             ====================================================== */}
 
-            <div className="
-                mb-4
-                p-3
-                bg-[#2A1A1A]
-                border-2
-                border-[#FF6B6B]
-                rounded-lg
-                text-center
-            ">
-
-                <p className="
-                    text-[#FF6B6B]
-                    text-sm
-                    font-bold
-                ">
-
-                    ⚠️ AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS - ATENDIMENTO POR ORDEM DE CHEGADA
-
-                </p>
-
-            </div>
+            {/* Verificar se algum dia da semana está fechado ou ordem de chegada */}
+            {diasSemana.some(d => dataEstaFechada(d) || dataEhOrdemChegada(d)) && (
+                <div className="mb-4 flex flex-col gap-2">
+                    {diasSemana.some(d => dataEstaFechada(d)) && (
+                        <div className="p-3 bg-[#2A1A1A] border-2 border-[#FF6B6B] rounded-lg text-center">
+                            <p className="text-[#FF6B6B] text-sm font-bold">
+                                🔒 BARBEARIA FECHADA - DOMINGO E SEGUNDA
+                            </p>
+                            <p className="text-[#E0E0E0] text-xs mt-1">
+                                Não realizamos atendimentos aos domingos e segundas-feiras
+                            </p>
+                        </div>
+                    )}
+                    {diasSemana.some(d => dataEhOrdemChegada(d)) && (
+                        <div className="p-3 bg-[#2A1A1A] border-2 border-[#FFA500] rounded-lg text-center">
+                            <p className="text-[#FFA500] text-sm font-bold">
+                                ⏰ ATENDIMENTO POR ORDEM DE CHEGADA - SEXTA E SÁBADO
+                            </p>
+                            <p className="text-[#E0E0E0] text-xs mt-1">
+                                Não é possível realizar agendamentos para estes dias
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
 
 
             {/* =====================================================
@@ -1057,16 +1087,19 @@ carregarAgendamentosPorPeriodo
                             )
 
 
-                        const ehSabado =
-                            dataEhSabado(
-                                dia
-                            )
+                        const fechado =
+                            dataEstaFechada(dia)
+
+
+                        const ordemChegada =
+                            dataEhOrdemChegada(dia)
 
 
                         const indisponivel =
                             passado ||
                             alemDoLimite ||
-                            ehSabado
+                            fechado ||
+                            ordemChegada
 
 
                         const isHoje =
@@ -1074,6 +1107,22 @@ carregarAgendamentosPorPeriodo
                             dia.getTime() ===
 
                             hoje.getTime()
+
+
+                        // Determinar cor do status
+                        let statusColor = ''
+                        let statusText = ''
+                        
+                        if (fechado) {
+                            statusColor = 'text-[#FF6B6B]'
+                            statusText = 'Fechado'
+                        } else if (ordemChegada) {
+                            statusColor = 'text-[#FFA500]'
+                            statusText = 'Ordem'
+                        } else if (passado || alemDoLimite) {
+                            statusColor = 'text-[#757575]'
+                            statusText = passado ? 'passado' : 'limite'
+                        }
 
 
                         return (
@@ -1102,9 +1151,11 @@ carregarAgendamentosPorPeriodo
                                     ${
                                         indisponivel
 
-                                            ? ehSabado
+                                            ? fechado
                                                 ? 'bg-[#2A1A1A] border-[#FF6B6B]'
-                                                : 'bg-[#333333] border-[#333333]'
+                                                : ordemChegada
+                                                    ? 'bg-[#2A1A1A] border-[#FFA500]'
+                                                    : 'bg-[#333333] border-[#333333]'
 
                                             : isHoje
 
@@ -1118,15 +1169,7 @@ carregarAgendamentosPorPeriodo
 
                                 <span className={`
                                     text-xs
-                                    ${
-                                        indisponivel
-
-                                            ? ehSabado
-                                                ? 'text-[#FF6B6B]'
-                                                : 'text-[#757575]'
-
-                                            : 'text-[#A0A0A0]'
-                                    }
+                                    ${indisponivel ? statusColor : 'text-[#A0A0A0]'}
                                 `}>
 
                                     {
@@ -1143,19 +1186,7 @@ carregarAgendamentosPorPeriodo
 
                                 <span className={`
                                     text-lg
-                                    ${
-                                        indisponivel
-
-                                            ? ehSabado
-                                                ? 'text-[#FF6B6B]'
-                                                : 'text-[#757575]'
-
-                                            : isHoje
-
-                                                ? 'text-[#D3AF37]'
-
-                                                : 'text-[#FFFFFF]'
-                                    }
+                                    ${indisponivel ? statusColor : isHoje ? 'text-[#D3AF37]' : 'text-[#FFFFFF]'}
                                 `}>
 
                                     {
@@ -1165,51 +1196,20 @@ carregarAgendamentosPorPeriodo
                                 </span>
 
 
-                                {ehSabado && (
-
-                                    <span className="
-                                        absolute
-                                        -top-1
-                                        -right-1
+                                {statusText && (
+                                    <span className={`
                                         text-[8px]
-                                        text-[#FF6B6B]
+                                        ${statusColor}
                                         bg-[#1A1A1A]
-                                        px-1
+                                        px-1.5
+                                        py-0.5
                                         rounded
                                         border
-                                        border-[#FF6B6B]
-                                    ">
-
-                                        SÁB
-
+                                        ${fechado ? 'border-[#FF6B6B]' : ordemChegada ? 'border-[#FFA500]' : 'border-[#757575]'}
+                                        mt-0.5
+                                    `}>
+                                        {statusText}
                                     </span>
-
-                                )}
-
-                                {passado && (
-
-                                    <span className="
-                                        text-[9px]
-                                        text-[#757575]
-                                    ">
-
-                                        passado
-
-                                    </span>
-
-                                )}
-
-                                {alemDoLimite && (
-
-                                    <span className="
-                                        text-[9px]
-                                        text-[#757575]
-                                    ">
-
-                                        limite
-
-                                    </span>
-
                                 )}
 
                             </div>
@@ -1299,11 +1299,12 @@ carregarAgendamentosPorPeriodo
                                         )
 
 
-                                    const ehSabado =
+                                    const fechado =
+                                        dataEstaFechada(dia)
 
-                                        dataEhSabado(
-                                            dia
-                                        )
+
+                                    const ordemChegada =
+                                        dataEhOrdemChegada(dia)
 
 
                                     const ocupado =
@@ -1318,16 +1319,42 @@ carregarAgendamentosPorPeriodo
 
 
                                     // Verificar se o horário está disponível
-                                    // (passado, limite e sábado são indisponíveis)
                                     const indisponivel =
 
                                         passado ||
 
                                         alemDoLimite ||
 
-                                        ehSabado ||
+                                        fechado ||
+
+                                        ordemChegada ||
 
                                         ocupado
+
+
+                                    // Determinar texto do status
+                                    let statusText = ''
+                                    let statusColor = ''
+                                    
+                                    if (fechado) {
+                                        statusText = 'fechado'
+                                        statusColor = 'text-[#FF6B6B]'
+                                    } else if (ordemChegada) {
+                                        statusText = 'ordem'
+                                        statusColor = 'text-[#FFA500]'
+                                    } else if (passado) {
+                                        statusText = 'indis.'
+                                        statusColor = 'text-[#757575]'
+                                    } else if (alemDoLimite) {
+                                        statusText = 'limite'
+                                        statusColor = 'text-[#757575]'
+                                    } else if (ocupado) {
+                                        statusText = 'ocupado'
+                                        statusColor = 'text-[#757575]'
+                                    } else {
+                                        statusText = 'livre'
+                                        statusColor = 'text-[#E0E0E0]'
+                                    }
 
 
                                     return (
@@ -1373,67 +1400,25 @@ carregarAgendamentosPorPeriodo
                                                 border-2
                                                 relative
 
-                                                ${
-                                                    passado ||
-                                                    alemDoLimite
-
-                                                        ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
-
-                                                        : ehSabado
-
-                                                            ? 'bg-[#2A1A1A] border-[#FF6B6B] cursor-not-allowed'
-
-                                                            : ocupado
-
-                                                                ? 'bg-[#333333] border-[#333333] cursor-not-allowed'
-
-                                                                : 'bg-[#1E1E1E] border-[#2A2A2A] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
+                                                ${indisponivel
+                                                    ? fechado
+                                                        ? 'bg-[#2A1A1A] border-[#FF6B6B] cursor-not-allowed'
+                                                        : ordemChegada
+                                                            ? 'bg-[#2A1A1A] border-[#FFA500] cursor-not-allowed'
+                                                            : 'bg-[#333333] border-[#333333] cursor-not-allowed'
+                                                    : 'bg-[#1E1E1E] border-[#2A2A2A] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
                                                 }
                                             `}
 
                                         >
 
                                             <span className={`
-                                                text-[10px]
+                                                text-[9px]
                                                 font-medium
-
-                                                ${
-                                                    passado ||
-                                                    alemDoLimite
-
-                                                        ? 'text-[#757575]'
-
-                                                        : ehSabado
-
-                                                            ? 'text-[#FF6B6B]'
-
-                                                            : ocupado
-
-                                                                ? 'text-[#757575]'
-
-                                                                : 'text-[#E0E0E0]'
-                                                }
+                                                ${statusColor}
                                             `}>
 
-                                                {
-                                                    passado
-
-                                                        ? 'indis.'
-
-                                                        : alemDoLimite
-
-                                                            ? 'indis.'
-
-                                                            : ehSabado
-
-                                                                ? 'sábado'
-
-                                                                : ocupado
-
-                                                                    ? 'ocupado'
-
-                                                                    : 'livre'
-                                                }
+                                                {statusText}
 
                                             </span>
 
@@ -1445,25 +1430,17 @@ carregarAgendamentosPorPeriodo
                                                 transition-all
                                                 duration-200
 
-                                                ${
-                                                    passado ||
-                                                    alemDoLimite
-
-                                                        ? 'bg-[#757575]'
-
-                                                        : ehSabado
-
-                                                            ? 'bg-[#FF6B6B]'
-
-                                                            : ocupado
-
-                                                                ? 'bg-[#D3AF37]'
-
-                                                                : 'bg-[#FFFFFF]'
+                                                ${indisponivel
+                                                    ? fechado
+                                                        ? 'bg-[#FF6B6B]'
+                                                        : ordemChegada
+                                                            ? 'bg-[#FFA500]'
+                                                            : 'bg-[#757575]'
+                                                    : 'bg-[#FFFFFF]'
                                                 }
                                             `} />
 
-                                            {ehSabado && (
+                                            {fechado && (
 
                                                 <span className="
                                                     absolute
@@ -1478,7 +1455,28 @@ carregarAgendamentosPorPeriodo
                                                     border-[#FF6B6B]
                                                 ">
 
-                                                    ❌
+                                                    🔒
+
+                                                </span>
+
+                                            )}
+
+                                            {ordemChegada && (
+
+                                                <span className="
+                                                    absolute
+                                                    -top-1
+                                                    -right-1
+                                                    text-[6px]
+                                                    text-[#FFA500]
+                                                    bg-[#1A1A1A]
+                                                    px-1
+                                                    rounded
+                                                    border
+                                                    border-[#FFA500]
+                                                ">
+
+                                                    ⏰
 
                                                 </span>
 

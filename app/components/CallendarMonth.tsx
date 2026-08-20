@@ -1,3 +1,4 @@
+// components/CallendarMonth.tsx
 'use client'
 
 import {
@@ -70,27 +71,6 @@ export default function CallendarMonth() {
 
     // =========================================================
     // DATA MÁXIMA DE AGENDAMENTO
-    // =========================================================
-    //
-    // O usuário pode agendar somente:
-    //
-    // HOJE
-    // +
-    // RESTANTE DO MÊS ATUAL
-    // +
-    // TODO O PRÓXIMO MÊS
-    //
-    // Exemplo:
-    //
-    // Hoje = Agosto/2026
-    //
-    // Pode:
-    // Agosto/2026
-    // Setembro/2026
-    //
-    // Não pode:
-    // Outubro/2026 em diante
-    //
     // =========================================================
 
     const dataMaximaAgendamento =
@@ -178,18 +158,35 @@ export default function CallendarMonth() {
 
 
     // =========================================================
-    // VERIFICAR SE DATA É SÁBADO
+    // VERIFICAR DIAS ESPECÍFICOS
     // =========================================================
 
-    function dataEhSabado(
-        data: Date
-    ) {
+    function getDiaSemana(data: Date) {
+        return data.getDay() // 0 = Domingo, 6 = Sábado
+    }
 
-        const diaDaSemana =
-            data.getDay() // 0 = Domingo, 6 = Sábado
+    function dataEhDomingo(data: Date) {
+        return getDiaSemana(data) === 0
+    }
 
-        return diaDaSemana === 6
+    function dataEhSegunda(data: Date) {
+        return getDiaSemana(data) === 1
+    }
 
+    function dataEhSexta(data: Date) {
+        return getDiaSemana(data) === 5
+    }
+
+    function dataEhSabado(data: Date) {
+        return getDiaSemana(data) === 6
+    }
+
+    function dataEstaFechada(data: Date) {
+        return dataEhDomingo(data) || dataEhSegunda(data)
+    }
+
+    function dataEhOrdemChegada(data: Date) {
+        return dataEhSexta(data) || dataEhSabado(data)
     }
 
 
@@ -273,12 +270,6 @@ export default function CallendarMonth() {
 
         }
 
-
-        // -----------------------------------------------------
-        // Se já estamos no próximo mês permitido,
-        // não podemos avançar mais.
-        // -----------------------------------------------------
-
         if (
             mesEhProximoPermitido
         ) {
@@ -286,7 +277,6 @@ export default function CallendarMonth() {
             return
 
         }
-
 
         proximoMes()
 
@@ -302,7 +292,6 @@ export default function CallendarMonth() {
             return
 
         }
-
 
         mesAnterior()
 
@@ -373,7 +362,9 @@ export default function CallendarMonth() {
 
         alemDoLimite: boolean
 
-        ehSabado: boolean
+        fechado: boolean
+
+        ordemChegada: boolean
 
         data: Date
 
@@ -431,8 +422,11 @@ export default function CallendarMonth() {
                 data.getTime() >
                 dataMaximaAgendamento.getTime(),
 
-            ehSabado:
-                dataEhSabado(data),
+            fechado:
+                dataEstaFechada(data),
+
+            ordemChegada:
+                dataEhOrdemChegada(data),
 
             data
 
@@ -513,8 +507,11 @@ export default function CallendarMonth() {
             alemDoLimite:
                 ehAlemDoLimite,
 
-            ehSabado:
-                dataEhSabado(data),
+            fechado:
+                dataEstaFechada(data),
+
+            ordemChegada:
+                dataEhOrdemChegada(data),
 
             data
 
@@ -572,8 +569,11 @@ export default function CallendarMonth() {
                 data.getTime() >
                 dataMaximaAgendamento.getTime(),
 
-            ehSabado:
-                dataEhSabado(data),
+            fechado:
+                dataEstaFechada(data),
+
+            ordemChegada:
+                dataEhOrdemChegada(data),
 
             data
 
@@ -595,93 +595,54 @@ export default function CallendarMonth() {
 
     ) {
 
-
-        // =====================================================
-        // NORMALIZAR DATA
-        // =====================================================
-
         const dataSelecionada =
             new Date(data)
 
-
         dataSelecionada.setHours(
-
             0,
             0,
             0,
             0
-
         )
 
-
-        // =====================================================
-        // NÃO PERMITE DATAS PASSADAS
-        // =====================================================
-
+        // Data passada
         if (
-
             dataSelecionada.getTime() <
-
             hoje.getTime()
-
         ) {
-
             return
-
         }
 
-
-        // =====================================================
-        // NÃO PERMITE DATAS ALÉM DO LIMITE
-        // =====================================================
-
+        // Data além do limite
         if (
-
             dataSelecionada.getTime() >
-
             dataMaximaAgendamento.getTime()
-
         ) {
-
             return
-
         }
 
-
-        // =====================================================
-        // NÃO PERMITE SÁBADOS
-        // =====================================================
-
+        // Data fechada (Domingo ou Segunda)
         if (
-
-            dataEhSabado(dataSelecionada)
-
+            dataEstaFechada(dataSelecionada)
         ) {
-
             return
-
         }
 
+        // Data ordem de chegada (Sexta ou Sábado)
+        if (
+            dataEhOrdemChegada(dataSelecionada)
+        ) {
+            return
+        }
 
-        // =====================================================
-        // DEFINE DATA NO CONTEXT
-        // =====================================================
-
+        // Define data no context
         definirDataVisualizada(
-
             dataSelecionada
-
         )
 
-
-        // =====================================================
-        // MUDA PARA O CALENDÁRIO DIÁRIO
-        // =====================================================
-
+        // Muda para o calendário diário
         setInterfaceView(
-
             'day'
-
         )
 
     }
@@ -720,9 +681,7 @@ export default function CallendarMonth() {
             ">
 
 
-                {/* =================================================
-                    MÊS ANTERIOR
-                ================================================== */}
+                {/* MÊS ANTERIOR */}
 
                 <button
 
@@ -774,9 +733,7 @@ export default function CallendarMonth() {
                 </button>
 
 
-                {/* =================================================
-                    NOME DO MÊS
-                ================================================== */}
+                {/* NOME DO MÊS */}
 
                 <div className="
                     flex
@@ -803,7 +760,6 @@ export default function CallendarMonth() {
                         }
 
                     </h1>
-
 
                     <span className="
                         text-[11px]
@@ -834,9 +790,7 @@ export default function CallendarMonth() {
                 </div>
 
 
-                {/* =================================================
-                    PRÓXIMO MÊS
-                ================================================== */}
+                {/* PRÓXIMO MÊS */}
 
                 <button
 
@@ -895,29 +849,29 @@ export default function CallendarMonth() {
 
 
             {/* =====================================================
-                LEGENDA DE SÁBADO
+                MENSAGENS DE STATUS
             ====================================================== */}
 
-            <div className="
-                mb-4
-                p-3
-                bg-[#2A1A1A]
-                border-2
-                border-[#FF6B6B]
-                rounded-lg
-                text-center
-            ">
+            <div className="mb-4 flex flex-col gap-2">
+                {/* Mensagem de Fechado */}
+                <div className="p-3 bg-[#2A1A1A] border-2 border-[#FF6B6B] rounded-lg text-center">
+                    <p className="text-[#FF6B6B] text-sm font-bold">
+                        🔒 BARBEARIA FECHADA - DOMINGO E SEGUNDA
+                    </p>
+                    <p className="text-[#E0E0E0] text-xs mt-1">
+                        Não realizamos atendimentos aos domingos e segundas-feiras
+                    </p>
+                </div>
 
-                <p className="
-                    text-[#FF6B6B]
-                    text-sm
-                    font-bold
-                ">
-
-                    ⚠️ AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS - ATENDIMENTO POR ORDEM DE CHEGADA
-
-                </p>
-
+                {/* Mensagem de Ordem de Chegada */}
+                <div className="p-3 bg-[#2A1A1A] border-2 border-[#FFA500] rounded-lg text-center">
+                    <p className="text-[#FFA500] text-sm font-bold">
+                        ⏰ ATENDIMENTO POR ORDEM DE CHEGADA - SEXTA E SÁBADO
+                    </p>
+                    <p className="text-[#E0E0E0] text-xs mt-1">
+                        Não é possível realizar agendamentos para estes dias
+                    </p>
+                </div>
             </div>
 
 
@@ -929,10 +883,6 @@ export default function CallendarMonth() {
                 w-full
                 mt-4
             ">
-
-                {/* =====================================================
-                    ANIMAÇÃO DE CARREGAMENTO
-                ====================================================== */}
 
                 {isLoading ? (
 
@@ -948,7 +898,6 @@ export default function CallendarMonth() {
                         "
                     >
 
-                        {/* Spinner */}
                         <div
                             className="
                                 w-12
@@ -971,7 +920,6 @@ export default function CallendarMonth() {
                             Carregando calendário...
                         </p>
 
-                        {/* Skeleton do calendário */}
                         <div
                             className="
                                 w-full
@@ -982,7 +930,6 @@ export default function CallendarMonth() {
                             "
                         >
 
-                            {/* Skeleton dos dias da semana */}
                             {[...Array(7)].map((_, index) => (
 
                                 <div
@@ -997,7 +944,6 @@ export default function CallendarMonth() {
 
                             ))}
 
-                            {/* Skeleton dos dias do mês */}
                             {[...Array(35)].map((_, index) => (
 
                                 <div
@@ -1020,10 +966,6 @@ export default function CallendarMonth() {
 
                 ) : (
 
-                    // =====================================================
-                    // CALENDÁRIO
-                    // =====================================================
-
                     <div className="
                         grid
                         grid-cols-7
@@ -1031,9 +973,7 @@ export default function CallendarMonth() {
                     ">
 
 
-                        {/* =================================================
-                            NOMES DOS DIAS
-                        ================================================== */}
+                        {/* NOMES DOS DIAS */}
 
                         {
                             diaSemanaNome.map(
@@ -1050,9 +990,11 @@ export default function CallendarMonth() {
                                             text-center
                                             pb-3
                                             ${
-                                                dia === 'Sábado'
+                                                dia === 'Domingo' || dia === 'Segunda-feira'
                                                     ? 'text-[#FF6B6B]'
-                                                    : 'text-[#A0A0A0]'
+                                                    : dia === 'Sexta-feira' || dia === 'Sábado'
+                                                        ? 'text-[#FFA500]'
+                                                        : 'text-[#A0A0A0]'
                                             }
                                         `}
 
@@ -1073,9 +1015,7 @@ export default function CallendarMonth() {
                         }
 
 
-                        {/* =================================================
-                            DIAS
-                        ================================================== */}
+                        {/* DIAS */}
 
                         {
                             calendario.map(
@@ -1086,10 +1026,7 @@ export default function CallendarMonth() {
                                 ) => {
 
 
-                                    // =============================================
-                                    // VERIFICAR SE PODE SELECIONAR
-                                    // =============================================
-
+                                    // Verificar se pode selecionar
                                     const podeSelecionar =
 
                                         item.atual &&
@@ -1098,14 +1035,22 @@ export default function CallendarMonth() {
 
                                         !item.alemDoLimite &&
 
-                                        !item.ehSabado
+                                        !item.fechado &&
+
+                                        !item.ordemChegada
 
 
-                                    // =============================================
-                                    // VERIFICAR SE É SÁBADO PARA DESTAQUE
-                                    // =============================================
-
-                                    const isSabado = item.ehSabado
+                                    // Determinar cor do status
+                                    let statusColor = ''
+                                    let statusText = ''
+                                    
+                                    if (item.fechado) {
+                                        statusColor = 'text-[#FF6B6B]'
+                                        statusText = '🔒'
+                                    } else if (item.ordemChegada) {
+                                        statusColor = 'text-[#FFA500]'
+                                        statusText = '⏰'
+                                    }
 
 
                                     return (
@@ -1165,27 +1110,31 @@ export default function CallendarMonth() {
 
                                                 ${
 
-                                                    isSabado
+                                                    item.fechado
 
                                                         ? 'bg-[#2A1A1A] border-[#FF6B6B] text-[#FF6B6B] cursor-not-allowed'
 
-                                                        : item.hoje
+                                                        : item.ordemChegada
 
-                                                            ? 'bg-[#1E1E1E] border-[#D3AF37] text-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
+                                                            ? 'bg-[#2A1A1A] border-[#FFA500] text-[#FFA500] cursor-not-allowed'
 
-                                                            : item.passado
+                                                            : item.hoje
 
-                                                                ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
+                                                                ? 'bg-[#1E1E1E] border-[#D3AF37] text-[#D3AF37] shadow-lg shadow-[#D3AF37]/20'
 
-                                                                : item.alemDoLimite
+                                                                : item.passado
 
                                                                     ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
 
-                                                                    : item.atual
+                                                                    : item.alemDoLimite
 
-                                                                        ? 'bg-[#1E1E1E] border-[#2A2A2A] text-[#E0E0E0] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
+                                                                        ? 'bg-[#333333] border-[#333333] text-[#757575] cursor-not-allowed'
 
-                                                                        : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#757575] cursor-not-allowed'
+                                                                        : item.atual
+
+                                                                            ? 'bg-[#1E1E1E] border-[#2A2A2A] text-[#E0E0E0] cursor-pointer hover:border-[#D3AF37] hover:bg-[#2A2A2A]'
+
+                                                                            : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#757575] cursor-not-allowed'
 
                                                 }
 
@@ -1193,22 +1142,21 @@ export default function CallendarMonth() {
 
                                         >
 
-                                            {isSabado && (
+                                            {statusText && (
 
                                                 <span className="
                                                     absolute
-                                                    -top-1
-                                                    -right-1
-                                                    text-[8px]
-                                                    text-[#FF6B6B]
+                                                    -top-2
+                                                    -right-2
+                                                    text-xs
                                                     bg-[#1A1A1A]
                                                     px-1
                                                     rounded
                                                     border
-                                                    border-[#FF6B6B]
+                                                    ${item.fechado ? 'border-[#FF6B6B]' : 'border-[#FFA500]'}
                                                 ">
 
-                                                    SÁB
+                                                    {statusText}
 
                                                 </span>
 
@@ -1217,7 +1165,6 @@ export default function CallendarMonth() {
                                             {
                                                 item.dia
                                             }
-
 
                                             <div
 
@@ -1236,22 +1183,27 @@ export default function CallendarMonth() {
 
                                                     ${
 
-                                                        isSabado
+                                                        item.fechado
 
                                                             ? 'bg-[#FF6B6B]'
 
-                                                            : item.hoje
+                                                            : item.ordemChegada
 
-                                                                ? 'bg-[#D3AF37]'
+                                                                ? 'bg-[#FFA500]'
 
-                                                                : item.atual &&
-                                                                  !item.passado &&
-                                                                  !item.alemDoLimite &&
-                                                                  !item.ehSabado
+                                                                : item.hoje
 
-                                                                    ? 'bg-[#FFFFFF]'
+                                                                    ? 'bg-[#D3AF37]'
 
-                                                                    : 'bg-[#333333]'
+                                                                    : item.atual &&
+                                                                      !item.passado &&
+                                                                      !item.alemDoLimite &&
+                                                                      !item.fechado &&
+                                                                      !item.ordemChegada
+
+                                                                        ? 'bg-[#FFFFFF]'
+
+                                                                        : 'bg-[#333333]'
 
                                                     }
 
