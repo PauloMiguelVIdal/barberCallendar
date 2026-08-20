@@ -592,3 +592,4 @@ export async function cancelarAgendamento(
     return data
 
 }
+

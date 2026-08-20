@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./context/AuthContext"; // Adicione esta importação
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,14 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BRAVE BOSS",
   description: "Barbearia BRAVE BOSS, localizada na cidade de Votuporanga-SP",
-  // Adicionar ícone
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/logo.png", type: "image/png" }, // Se preferir PNG
+      { url: "/logo.png", type: "image/png" },
     ],
     apple: [
-      { url: "/logo.png" }, // Para dispositivos Apple
+      { url: "/logo.png" },
     ],
   },
 };
@@ -40,16 +40,20 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="pt-BR" // Mudei de "en" para "pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Adicionar também via link tags para mais compatibilidade */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/logo.png" type="image/png" />
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Envolva os children com o AuthProvider */}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

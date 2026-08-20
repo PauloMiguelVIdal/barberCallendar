@@ -7,7 +7,7 @@ import React, {
     useEffect,
     useCallback
 } from 'react'
-
+import { supabase } from '../../lib/supabase'
 
 import {
     AgendamentoLocalType
@@ -175,6 +175,7 @@ type CentralDadosContextType = {
         | 'week'
         | 'month'
         | 'appointments'
+            | 'admin'  // ADICIONAR ESTE
 
     setInterfaceView: (
         view:
@@ -182,7 +183,34 @@ type CentralDadosContextType = {
             | 'week'
             | 'month'
             | 'appointments'
+            | 'admin'  // ADICIONAR ESTE
     ) => void
+
+      atualizarAgendamento: (
+    agendamentoId: string,
+    dadosSupabase: {
+      cliente_id: string
+      servicos_id: string[]
+      data: string
+      hora_inicio: string
+      hora_fim: string
+      observacoes?: string
+      concluido: boolean
+      cancelado: boolean
+    },
+    dadosLocalStorage: {
+      data: string
+      hora: string
+      hora_fim: string
+      nome: string
+      telefone: string
+      servicos: any[]
+      duracao: number
+      valor: number
+      blocos: number
+      cancelado: boolean
+    }
+  ) => Promise<void>
 
 }
 
@@ -879,6 +907,112 @@ setIsLoading(false)
     // ADICIONAR AGENDAMENTO
     // ====================================================
 
+// Adicione esta função dentro do CentralDadosProvider
+const atualizarAgendamento = async (
+  agendamentoId: string,
+  dadosSupabase: {
+    cliente_id: string
+    servicos_id: string[]
+    data: string
+    hora_inicio: string
+    hora_fim: string
+    observacoes?: string
+    concluido: boolean
+    cancelado: boolean
+  },
+  dadosLocalStorage: {
+    data: string
+    hora: string
+    hora_fim: string
+    nome: string
+    telefone: string
+    servicos: any[]
+    duracao: number
+    valor: number
+    blocos: number
+    cancelado: boolean
+  }
+) => {
+  try {
+    // 1. Atualizar no Supabase (agendamentos)
+    const { error: updateError } = await supabase
+      .from('agendamentos')
+      .update({
+        cliente_id: dadosSupabase.cliente_id,
+        data: dadosSupabase.data,
+        hora_inicio: dadosSupabase.hora_inicio,
+        hora_fim: dadosSupabase.hora_fim,
+        observacoes: dadosSupabase.observacoes,
+        concluido: dadosSupabase.concluido,
+        cancelado: dadosSupabase.cancelado
+      })
+      .eq('id', agendamentoId)
+
+    if (updateError) throw updateError
+
+    // 2. Remover serviços antigos
+    const { error: deleteError } = await supabase
+      .from('agendamento_servicos')
+      .delete()
+      .eq('agendamento_id', agendamentoId)
+
+    if (deleteError) throw deleteError
+
+    // 3. Adicionar novos serviços
+    if (dadosSupabase.servicos_id.length > 0) {
+      const servicosInsert = dadosSupabase.servicos_id.map(servicoId => ({
+        agendamento_id: agendamentoId,
+        servico_id: servicoId
+      }))
+
+      const { error: insertError } = await supabase
+        .from('agendamento_servicos')
+        .insert(servicosInsert)
+
+      if (insertError) throw insertError
+    }
+
+    // 4. Atualizar Local Storage
+    setAgendamentosCliente(prev => {
+      const index = prev.findIndex(a => a.id === agendamentoId)
+      if (index === -1) return prev
+
+      const novoAgendamento = {
+        ...prev[index],
+        data: dadosLocalStorage.data,
+        hora: dadosLocalStorage.hora,
+        hora_fim: dadosLocalStorage.hora_fim,
+        nome: dadosLocalStorage.nome,
+        telefone: dadosLocalStorage.telefone,
+        servicos: dadosLocalStorage.servicos,
+        duracao: dadosLocalStorage.duracao,
+        valor: dadosLocalStorage.valor,
+        blocos: dadosLocalStorage.blocos,
+        cancelado: dadosLocalStorage.cancelado
+      }
+
+      const novaLista = [...prev]
+      novaLista[index] = novoAgendamento
+      return novaLista
+    })
+
+    // 5. Atualizar calendário se for o dia atual
+    const dataAtual = formatarDataBanco(dataVisualizada)
+    if (dadosLocalStorage.data === dataAtual) {
+      // Recarregar agendamentos do dia
+      const dadosAtualizados = await buscarAgendamentosPorData(dataAtual)
+      setAgendamentos(dadosAtualizados)
+    }
+
+    console.log('[AGENDAMENTO] Atualizado com sucesso:', agendamentoId)
+
+  } catch (error) {
+    console.error('Erro ao atualizar agendamento:', error)
+    throw error
+  }
+}
+
+
 async function adicionarAgendamento(
     novoAgendamento: CriarAgendamentoType,
     dadosLocal: Omit<AgendamentoLocalType, 'id'>
@@ -1516,6 +1650,7 @@ useEffect(() => {
         | 'week'
         | 'month'
         | 'appointments'
+         | 'admin'  // ADICIONAR ESTA LINHA
     >(
         'day'
     )
@@ -1571,7 +1706,7 @@ return (
             removerAgendamento,
 
             carregandoAgendamentosCliente,
-
+atualizarAgendamento,
 
             // =========================================
             // AGENDAMENTOS DO CLIENTE

@@ -110,9 +110,10 @@ function HomeContent() {
 
       <main className="flex-1 overflow-y-auto p-0 w-full bg-[#121212] pb-[80px]">
 
-        {interfaceView === 'day' && (
-          <Callendar />
-        )}
+    {(interfaceView === 'day' || interfaceView === 'admin') && (
+  <Callendar />
+)}
+
 
         {interfaceView === 'week' && (
           <CallendarWeek />

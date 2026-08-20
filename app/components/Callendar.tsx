@@ -2,12 +2,27 @@
 
 import {
   ArrowBigLeft,
-  ArrowBigRight
+  ArrowBigRight,
+  Users,
+  User,
+  CalendarCheck,
+  Phone,
+  Copy,
+  Check,
+  Edit2,
+  Trash2,
+  Scissors,
+  Clock,
+  X,
+  DollarSign,
+  ShoppingBag,
+  Calendar
 } from 'lucide-react'
 
 import {
   useEffect,
-  useState
+  useState,
+  useMemo
 } from 'react'
 
 import Horario from './Horario'
@@ -26,6 +41,16 @@ import {
   AgendamentoType
 } from '../types/Agendamento'
 
+import FormularioEdicao from './FormularioEdicao'
+
+// =========================================================
+// IMPORTAÇÕES DO BANCO DE DADOS (NOVAS)
+// =========================================================
+import { buscarClientePorId } from '../services/clienteService'
+import { buscarServicos } from '../services/servicosService'
+// NOVA IMPORTAÇÃO: Buscar serviços do agendamento
+import { buscarServicosPorAgendamento } from '../services/agendamentoServicoService'
+
 
 export default function Callendar() {
 
@@ -38,8 +63,14 @@ export default function Callendar() {
     horarioSelecionado,
     selecionarHorario,
     proximoDia,
-    diaAnterior
+    diaAnterior,
+    interfaceView,
+    setInterfaceView
   } = useCentralDados()
+
+
+const [modalEdicao, setModalEdicao] = useState(false)
+const [agendamentoEditando, setAgendamentoEditando] = useState<any>(null)
 
 
   // =========================================================
@@ -48,18 +79,41 @@ export default function Callendar() {
 
   const {
     agendamentos,
-    isLoading
+    isLoading,
+    removerAgendamento,
+    agendamentosCliente // Mantido para não quebrar seu fluxo original
   } = useAgendamentos()
 
 
   // =========================================================
-  // ESTADO DO MODAL
+  // ESTADO DO MODAL E ADMIN
   // =========================================================
 
   const [
     modalAgendamento,
     setModalAgendamento
   ] = useState(false)
+
+  const [
+    modalCancelar,
+    setModalCancelar
+  ] = useState(false)
+
+  const [
+    agendamentoSelecionado,
+    setAgendamentoSelecionado
+  ] = useState<any>(null)
+
+  const [
+    copiado,
+    setCopiado
+  ] = useState(false)
+
+  // Estados extras para buscar dados do Banco no Modo Admin
+  const [dadosAdminMap, setDadosAdminMap] = useState<Record<string, any>>({})
+  const [servicosAdminMap, setServicosAdminMap] = useState<Record<string, any>>({})
+  const [servicosAgendamentoMap, setServicosAgendamentoMap] = useState<Record<string, any[]>>({})
+  const [carregandoAdmin, setCarregandoAdmin] = useState(false)
 
 
   // =========================================================
@@ -76,34 +130,19 @@ export default function Callendar() {
   )
 
 
-
-const DURACAO_BLOCO = 45
-
-// Tempo que pode ultrapassar o bloco sem consumir o próximo
-const TEMPO_TOLERANCIA = 20
+  const DURACAO_BLOCO = 45
+  const TEMPO_TOLERANCIA = 20
 
   // =========================================================
   // DATA VISUALIZADA
   // =========================================================
 
-  const diaVisualizado =
-    dataVisualizada.getDate()
-
-  const mesVisualizado =
-    dataVisualizada.getMonth()
-
-  const anoVisualizado =
-    dataVisualizada.getFullYear()
-
-  // =========================================================
-  // VERIFICAR SE É SÁBADO
-  // =========================================================
-
-  const diaDaSemana =
-    dataVisualizada.getDay() // 0 = Domingo, 6 = Sábado
-
-  const ehSabado =
-    diaDaSemana === 6
+  const diaVisualizado = dataVisualizada.getDate()
+  const mesVisualizado = dataVisualizada.getMonth()
+  const anoVisualizado = dataVisualizada.getFullYear()
+  const diaDaSemana = dataVisualizada.getDay()
+  const ehSabado = diaDaSemana === 6
+  const isAdmin = interfaceView === 'admin'
 
 
   // =========================================================
@@ -111,37 +150,21 @@ const TEMPO_TOLERANCIA = 20
   // =========================================================
 
   const horarios: horarioType[] = [
-
     { hora: '9:00', ocupado: false },
-
     { hora: '9:45', ocupado: false },
-
     { hora: '10:30', ocupado: false },
-
     { hora: '11:15', ocupado: false },
-
     { hora: '12:00', ocupado: false },
-
     { hora: '12:45', ocupado: false },
-
     { hora: '13:30', ocupado: false },
-
     { hora: '14:15', ocupado: false },
-
     { hora: '15:00', ocupado: false },
-
     { hora: '15:45', ocupado: false },
-
     { hora: '16:30', ocupado: false },
-
     { hora: '17:15', ocupado: false },
-
     { hora: '18:00', ocupado: false },
-
     { hora: '18:45', ocupado: false },
-
     { hora: '19:30', ocupado: false }
-
   ]
 
 
@@ -158,162 +181,159 @@ const TEMPO_TOLERANCIA = 20
 
 
   // =========================================================
-  // CONVERTER HORÁRIO PARA MINUTOS
+  // FUNÇÕES AUXILIARES
   // =========================================================
 
-  function horarioParaMinutos(
-    horario: string
-  ) {
-
-    const [
-      horas,
-      minutos
-    ] = horario
-      .split(':')
-      .map(Number)
+  function formatarDataParaExibicao(data: string) {
+    if (!data) return '--/--/----'
+    const [ano, mes, dia] = data.split('-')
+    return `${dia}/${mes}/${ano}`
+  }
 
 
-    return (
-      horas * 60 +
-      minutos
-    )
-
+  function horarioParaMinutos(horario: string) {
+    const [horas, minutos] = horario.split(':').map(Number)
+    return (horas * 60 + minutos)
   }
 
 
   // =========================================================
   // VERIFICAR SE HORÁRIO ESTÁ OCUPADO
   // =========================================================
-  //
-  // Agora usamos:
-  //
-  // hora_inicio
-  // hora_fim
-  //
-  // em vez de:
-  //
-  // hora
-  // blocos
-  // duracao
-  //
-  // =========================================================
 
-  function horarioEstaOcupado(
-    horarioVerificado: string
-  ) {
+  function horarioEstaOcupado(horarioVerificado: string) {
 
-    // Se for sábado, todos os horários estão "ocupados" (indisponíveis)
     if (ehSabado) {
       return true
     }
 
-    const minutoVerificado =
-      horarioParaMinutos(
-        horarioVerificado
-      )
+    const minutoVerificado = horarioParaMinutos(horarioVerificado)
+
+    return agendamentos.some(agendamento => {
+      if (agendamento.data !== dataFormatada) return false
+      if (agendamento.cancelado) return false
+
+      const inicioAgendamento = horarioParaMinutos(agendamento.hora_inicio.slice(0, 5))
+      const fimAgendamento = horarioParaMinutos(agendamento.hora_fim.slice(0, 5))
+
+      return (minutoVerificado >= inicioAgendamento && minutoVerificado < fimAgendamento)
+    })
+  }
 
 
-    return agendamentos.some(
+  // =========================================================
+  // OBTER AGENDAMENTO POR HORÁRIO
+  // =========================================================
 
-      agendamento => {
+  function obterAgendamentoPorHorario(horarioVerificado: string) {
 
-        // =====================================================
-        // IGNORAR OUTRAS DATAS
-        // =====================================================
+    const minutoVerificado = horarioParaMinutos(horarioVerificado)
 
-        if (
-          agendamento.data !==
-          dataFormatada
-        ) {
+    const agendamentoEncontrado = agendamentos.find(agendamento => {
+      if (agendamento.data !== dataFormatada) return false
+      if (agendamento.cancelado) return false
 
-          return false
+      const inicioAgendamento = horarioParaMinutos(agendamento.hora_inicio.slice(0, 5))
+      const fimAgendamento = horarioParaMinutos(agendamento.hora_fim.slice(0, 5))
 
-        }
+      return (minutoVerificado >= inicioAgendamento && minutoVerificado < fimAgendamento)
+    })
 
-
-        // =====================================================
-        // IGNORAR AGENDAMENTOS CANCELADOS
-        // =====================================================
-
-        if (
-          agendamento.cancelado
-        ) {
-
-          return false
-
-        }
+    return agendamentoEncontrado
+  }
 
 
-        // =====================================================
-        // INÍCIO
-        // =====================================================
+  // =========================================================
+  // OBTER DADOS DO CLIENTE DO AGENDAMENTO LOCAL (MANTIDO)
+  // =========================================================
 
-const inicioAgendamento =
-    horarioParaMinutos(
-        agendamento.hora_inicio.slice(0, 5)
+  function obterDadosCliente(agendamentoId: string) {
+    const agendamentoLocal = agendamentosCliente.find(
+      a => a.id === agendamentoId
     )
-
-        // =====================================================
-        // FIM
-        // =====================================================
-
-const fimAgendamento =
-    horarioParaMinutos(
-        agendamento.hora_fim.slice(0, 5)
-    )
-
-
-    const duracaoAgendamento =
-    fimAgendamento -
-    inicioAgendamento
+    
+    return {
+      nome: agendamentoLocal?.nome || 'Cliente não identificado',
+      telefone: agendamentoLocal?.telefone || '',
+      servicos: agendamentoLocal?.servicos || [],
+      duracao: agendamentoLocal?.duracao || 0,
+      valor: agendamentoLocal?.valor || 0
+    }
+  }
 
 
-const blocosAgendamento =
-    Math.max(
-        1,
-        Math.ceil(
-            (
-                duracaoAgendamento -
-                TEMPO_TOLERANCIA
-            ) /
-            DURACAO_BLOCO
-        )
-    )
+  // =========================================================
+  // FUNÇÃO PARA CALCULAR DURAÇÃO E VALOR TOTAL DOS SERVIÇOS
+  // =========================================================
 
-        // =====================================================
-        // VERIFICAR CONFLITO
-        // =====================================================
+  function calcularTotaisServicos(servicos: any[]) {
+    let duracaoTotal = 0
+    let valorTotal = 0
 
-return (
-  minutoVerificado >= inicioAgendamento &&
-  minutoVerificado < fimAgendamento
-)
+    servicos.forEach(servico => {
+      duracaoTotal += servico.duracao || 0
+      valorTotal += servico.valor || 0
+    })
 
-      }
+    return { duracaoTotal, valorTotal }
+  }
 
-    )
 
+  // =========================================================
+  // FORMATAR TELEFONE
+  // =========================================================
+
+  function formatarTelefone(telefone: string) {
+    if (!telefone) return ''
+    const apenasNumeros = telefone.replace(/\D/g, '')
+    if (apenasNumeros.length === 11) {
+      return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7, 11)}`
+    }
+    if (apenasNumeros.length === 10) {
+      return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 6)}-${apenasNumeros.slice(6, 10)}`
+    }
+    return telefone
+  }
+
+
+  // =========================================================
+  // COPIAR TELEFONE
+  // =========================================================
+
+  async function copiarTelefone(telefone: string) {
+    try {
+      await navigator.clipboard.writeText(telefone)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 3000)
+    } catch (error) {
+      console.error('Erro ao copiar:', error)
+    }
+  }
+
+
+  // =========================================================
+  // CANCELAR AGENDAMENTO (ADMIN)
+  // =========================================================
+
+  async function handleCancelarAgendamento() {
+    if (!agendamentoSelecionado) return
+
+    try {
+      await removerAgendamento(agendamentoSelecionado.id)
+      setModalCancelar(false)
+      setAgendamentoSelecionado(null)
+    } catch (error) {
+      console.error('Erro ao cancelar:', error)
+      alert('Erro ao cancelar agendamento. Tente novamente.')
+    }
   }
 
 
   // =========================================================
   // ADAPTAR AGENDAMENTOS PARA O FORMULÁRIO
   // =========================================================
-  //
-  // O Formulario ainda está usando o formato antigo:
-  //
-  // hora
-  // nome
-  // telefone
-  //
-  // Portanto fazemos uma adaptação temporária.
-  //
-  // Isso NÃO altera o AgendamentoType.
-  //
-  // =========================================================
 
-const agendamentosFormulario =
-  agendamentos.map(
+  const agendamentosFormulario = agendamentos.map(
     (agendamento) => ({
       id: agendamento.id,
       data: agendamento.data,
@@ -330,120 +350,111 @@ const agendamentosFormulario =
 
   useEffect(() => {
 
-    if (
-      !horarioSelecionado
-    ) {
-
+    if (!horarioSelecionado || isAdmin) {
       return
-
     }
 
-
-    // Não abrir modal se for sábado
     if (ehSabado) {
       selecionarHorario(null)
       return
     }
 
-    const horarioExiste =
-      horarios.some(
+    const horarioExiste = horarios.some(horario => horario.hora === horarioSelecionado)
 
-        horario =>
-          horario.hora ===
-          horarioSelecionado
-
-      )
-
-
-    if (
-      !horarioExiste
-    ) {
-
+    if (!horarioExiste) {
       return
-
     }
 
+    setModalAgendamento(true)
 
-    setModalAgendamento(
-      true
+  }, [horarioSelecionado, isAdmin])
+
+
+  // =========================================================
+  // CORREÇÃO: BUSCAR DADOS REAIS DO BANCO PARA O ADMIN
+  // =========================================================
+
+  useEffect(() => {
+    async function buscarDadosAdmin() {
+      if (!isAdmin) return
+      setCarregandoAdmin(true)
+
+      try {
+        // 1. Puxar todos os serviços do banco
+        const servicosDB = await buscarServicos()
+        const mapServicos: Record<string, any> = {}
+        servicosDB.forEach(s => { mapServicos[s.id] = s })
+        setServicosAdminMap(mapServicos)
+
+        // 2. Puxar os clientes de cada agendamento do dia atual
+        const agendamentosDoDia = agendamentos.filter(a => a.data === dataFormatada && !a.cancelado)
+        
+        // Criar um mapa de cliente_id para os dados do cliente
+        const mapClientes: Record<string, any> = {}
+        
+        for (const agendamento of agendamentosDoDia) {
+          if (agendamento.cliente_id && !mapClientes[agendamento.cliente_id]) {
+            const cliente = await buscarClientePorId(agendamento.cliente_id)
+            if (cliente) {
+              mapClientes[agendamento.cliente_id] = cliente
+            }
+          }
+        }
+        setDadosAdminMap(mapClientes)
+
+        // 3. Buscar serviços de cada agendamento
+        const mapServicosAgendamento: Record<string, any[]> = {}
+        
+        for (const agendamento of agendamentosDoDia) {
+          if (agendamento.id) {
+            const servicosAgendamento = await buscarServicosPorAgendamento(agendamento.id)
+            mapServicosAgendamento[agendamento.id] = servicosAgendamento
+          }
+        }
+        setServicosAgendamentoMap(mapServicosAgendamento)
+
+      } catch (error) {
+        console.error('Erro ao carregar dados do Admin:', error)
+      } finally {
+        setCarregandoAdmin(false)
+      }
+    }
+
+    buscarDadosAdmin()
+  }, [isAdmin, agendamentos, dataFormatada])
+
+
+  // =========================================================
+  // RESUMO FINANCEIRO - ADMIN
+  // =========================================================
+
+  const resumoFinanceiro = useMemo(() => {
+    // Pega todos os agendamentos do dia (não cancelados)
+    const agendamentosDoDia = agendamentos.filter(
+      a => a.data === dataFormatada && !a.cancelado
     )
 
-  }, [
-    horarioSelecionado
-  ])
+    // Total de clientes (agendamentos)
+    const totalClientes = agendamentosDoDia.length
 
+    // Total de serviços e faturamento
+    let totalServicos = 0
+    let faturamentoTotal = 0
 
-  // =========================================================
-  // AGENDAR HORÁRIO
-  // =========================================================
-  //
-  // IMPORTANTE:
-  //
-  // Esta função ainda precisa receber:
-  //
-  // cliente_id
-  // servicos_id
-  //
-  // porque agora essas informações pertencem ao banco.
-  //
-  // =========================================================
+    agendamentosDoDia.forEach(agendamento => {
+      const servicos = servicosAgendamentoMap[agendamento.id] || []
+      const { valorTotal } = calcularTotaisServicos(servicos)
+      
+      totalServicos += servicos.length
+      faturamentoTotal += valorTotal
+    })
 
-  // function agendarHorario(
-  //   nome: string,
-  //   telefone: string,
-  //   data: string,
-  //   horario: string,
-  //   blocos: number,
-  //   duracao: number
-  // ) {
-
-  //   console.log(
-  //     'Dados recebidos pelo formulário:',
-  //     {
-  //       nome,
-  //       telefone,
-  //       data,
-  //       horario,
-  //       blocos,
-  //       duracao
-  //     }
-  //   )
-
-
-  //   /*
-  //     A criação real do agendamento será feita
-  //     depois que o Formulario também passar:
-
-  //     cliente_id
-  //     servicos_id
-
-  //     Exemplo:
-
-  //     const novoAgendamento = {
-  //       cliente_id,
-  //       servicos_id,
-  //       data,
-  //       hora_inicio: horario,
-  //       hora_fim,
-  //       observacoes
-  //     }
-
-  //     adicionarAgendamento(
-  //       novoAgendamento
-  //     )
-  //   */
-
-
-  //   setModalAgendamento(
-  //     false
-  //   )
-
-
-  //   selecionarHorario(
-  //     null
-  //   )
-
-  // }
+    return {
+      totalClientes,
+      totalServicos,
+      faturamentoTotal
+    }
+  }, [agendamentos, servicosAgendamentoMap, dataFormatada])
 
 
   // =========================================================
@@ -451,45 +462,19 @@ const agendamentosFormulario =
   // =========================================================
 
   const meses = [
-
-    'Janeiro',
-
-    'Fevereiro',
-
-    'Março',
-
-    'Abril',
-
-    'Maio',
-
-    'Junho',
-
-    'Julho',
-
-    'Agosto',
-
-    'Setembro',
-
-    'Outubro',
-
-    'Novembro',
-
-    'Dezembro'
-
+    'Janeiro', 'Fevereiro', 'Março', 'Abril',
+    'Maio', 'Junho', 'Julho', 'Agosto',
+    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ]
+
 
   // =========================================================
   // NOME DOS DIAS DA SEMANA
   // =========================================================
 
   const diasSemana = [
-    'Domingo',
-    'Segunda',
-    'Terça',
-    'Quarta',
-    'Quinta',
-    'Sexta',
-    'Sábado'
+    'Domingo', 'Segunda', 'Terça', 'Quarta',
+    'Quinta', 'Sexta', 'Sábado'
   ]
 
 
@@ -506,6 +491,7 @@ const agendamentosFormulario =
         bg-[#121212]
         text-[#E0E0E0]
         p-4
+        overflow-y-auto
       "
     >
 
@@ -524,24 +510,15 @@ const agendamentosFormulario =
           border-b
           border-[#2A2A2A]
           mb-4
+          flex-wrap
+          gap-2
         "
       >
 
-        {/* =================================================
-            DIA ANTERIOR
-        ================================================== */}
-
+        {/* DIA ANTERIOR */}
         <button
-
-          onClick={
-            diaAnterior
-          }
-
-          disabled={
-            dataVisualizada.getTime() ===
-            hoje.getTime()
-          }
-
+          onClick={diaAnterior}
+          disabled={dataVisualizada.getTime() === hoje.getTime()}
           className={`
             flex
             w-[50px]
@@ -549,97 +526,76 @@ const agendamentosFormulario =
             rounded-full
             items-center
             justify-center
-
-            ${
-              dataVisualizada.getTime() ===
-              hoje.getTime()
-
-                ? 'bg-[#333333] cursor-not-allowed'
-
-                : 'bg-[#D3AF37] hover:bg-[#C4A032]'
+            ${dataVisualizada.getTime() === hoje.getTime()
+              ? 'bg-[#333333] cursor-not-allowed'
+              : 'bg-[#D3AF37] hover:bg-[#C4A032]'
             }
           `}
-
         >
-
-          <ArrowBigLeft
-            color="white"
-          />
-
+          <ArrowBigLeft color="white" />
         </button>
 
 
-        {/* =================================================
-            DATA
-        ================================================== */}
-
+        {/* DATA */}
         <div className="text-center">
-
-          <h1
-            className="
-              text-[25px]
-              text-[#FFFFFF]
-              text-center
-              font-bold
-            "
-          >
-
-            {diaVisualizado}/
-            {mesVisualizado + 1}/
-            {anoVisualizado}
-
+          <h1 className="text-[25px] text-[#FFFFFF] text-center font-bold">
+            {diaVisualizado}/{mesVisualizado + 1}/{anoVisualizado}
           </h1>
-
-          {/* =================================================
-              DIA DA SEMANA
-          ================================================== */}
-
-          <p
-            className={`
-              text-sm
-              mt-1
-              ${
-                ehSabado
-                  ? 'text-[#FF6B6B]'
-                  : 'text-[#AAAAAA]'
-              }
-            `}
-          >
+          <p className={`text-sm mt-1 ${ehSabado ? 'text-[#FF6B6B]' : 'text-[#AAAAAA]'}`}>
             {diasSemana[diaDaSemana]}
           </p>
-
         </div>
 
 
-        {/* =================================================
-            PRÓXIMO DIA
-        ================================================== */}
-
+        {/* PRÓXIMO DIA */}
         <button
-
-          onClick={
-            proximoDia
-          }
-
-          className="
-            flex
-            w-[50px]
-            h-[50px]
-            bg-[#D3AF37]
-            rounded-full
-            items-center
-            justify-center
-            hover:bg-[#C4A032]
-          "
-
+          onClick={proximoDia}
+          className="flex w-[50px] h-[50px] bg-[#D3AF37] rounded-full items-center justify-center hover:bg-[#C4A032]"
         >
-
-          <ArrowBigRight
-            color="white"
-          />
-
+          <ArrowBigRight color="white" />
         </button>
 
+      </div>
+
+
+      {/* =====================================================
+          BOTÃO ADMIN / USER
+      ====================================================== */}
+
+      <div className="w-full flex justify-end mb-4">
+        <button
+          onClick={() => {
+            setInterfaceView(isAdmin ? 'day' : 'admin')
+          }}
+          className={`
+            px-4
+            py-2
+            rounded-xl
+            text-sm
+            font-bold
+            flex
+            items-center
+            gap-2
+            transition-all
+            duration-200
+            ${isAdmin
+              ? 'bg-[#D3AF37] text-[#121212] hover:bg-[#C4A032]'
+              : 'bg-[#2A2A2A] text-[#A0A0A0] hover:bg-[#333333]'
+            }
+          `}
+        >
+          {isAdmin ? (
+            <>
+              <User size={16} />
+              Modo Cliente
+            </>
+          ) : (
+            <>
+              <Users size={16} />
+              Modo Admin
+            </>
+          )}
+        </button>
       </div>
 
 
@@ -647,216 +603,100 @@ const agendamentosFormulario =
           MENSAGEM DE SÁBADO
       ====================================================== */}
 
-      {ehSabado && (
-
-        <div
-          className="
-            w-full
-            p-6
-            mb-4
-            bg-[#2A1A1A]
-            border-2
-            border-[#FF6B6B]
-            rounded-lg
-            text-center
-          "
-        >
-
-          <p
-            className="
-              text-[#FF6B6B]
-              text-lg
-              font-bold
-            "
-          >
-            ⚠️ ATENÇÃO: AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS
-          </p>
-
-          <p
-            className="
-              text-[#E0E0E0]
-              mt-2
-            "
-          >
-            O atendimento é realizado por ordem de chegada.
-          </p>
-
+      {ehSabado && !isAdmin && (
+        <div className="w-full p-6 mb-4 bg-[#2A1A1A] border-2 border-[#FF6B6B] rounded-lg text-center">
+          <p className="text-[#FF6B6B] text-lg font-bold">⚠️ ATENÇÃO: AOS SÁBADOS NÃO REALIZAMOS AGENDAMENTOS</p>
+          <p className="text-[#E0E0E0] mt-2">O atendimento é realizado por ordem de chegada.</p>
         </div>
-
       )}
 
 
       {/* =====================================================
-          LISTA DE HORÁRIOS
+          RESUMO FINANCEIRO - MODO ADMIN
       ====================================================== */}
 
-      <div
-        className="
-          flex
-          items-center
-          flex-col
-          mt-0
-          pb-[80px]
-          gap-2
-          px-4
-          bg-gradient-to-b
-          from-[#121212]
-          to-[#1E1E1E]
-        "
-      >
-
-        {/* =====================================================
-            ANIMAÇÃO DE CARREGAMENTO
-        ====================================================== */}
-
-        {isLoading ? (
-
-          <div
-            className="
-              w-full
-              flex
-              flex-col
-              items-center
-              justify-center
-              py-12
-              gap-4
-            "
-          >
-
-            {/* Spinner */}
-            <div
-              className="
-                w-12
-                h-12
-                border-4
-                border-[#D3AF37]
-                border-t-transparent
-                rounded-full
-                animate-spin
-              "
-            />
-
-            <p
-              className="
-                text-[#A0A0A0]
-                text-sm
-                animate-pulse
-              "
-            >
-              Carregando agendamentos...
-            </p>
-
-            {/* Skeleton dos horários */}
-            <div
-              className="
-                w-full
-                max-w-[500px]
-                flex
-                flex-col
-                gap-2
-                mt-4
-              "
-            >
-
-              {[...Array(6)].map((_, index) => (
-
-                <div
-                  key={index}
-                  className="
-                    w-full
-                    h-[52px]
-                    bg-[#1E1E1E]
-                    rounded-lg
-                    animate-pulse
-                    border
-                    border-[#2A2A2A]
-                  "
-                />
-
-              ))}
-
+      {isAdmin && !isLoading && !carregandoAdmin && (
+        <div className="w-full mb-6">
+          <div className="
+            bg-gradient-to-r from-[#1E1E1E] to-[#2A2A2A]
+            border border-[#D3AF37]/30
+            rounded-2xl
+            p-5
+            grid
+            grid-cols-1
+            sm:grid-cols-3
+            gap-4
+          ">
+            {/* Total de Clientes */}
+            <div className="flex items-center gap-4">
+              <div className="w-[50px] h-[50px] rounded-xl bg-[#D3AF37]/20 flex items-center justify-center border border-[#D3AF37]/30">
+                <Users size={24} color="#D3AF37" />
+              </div>
+              <div>
+                <p className="text-xs text-[#A0A0A0] uppercase tracking-wider">Clientes</p>
+                <p className="text-2xl font-bold text-[#FFFFFF]">
+                  {resumoFinanceiro.totalClientes}
+                </p>
+              </div>
             </div>
 
+            {/* Total de Serviços */}
+            <div className="flex items-center gap-4">
+              <div className="w-[50px] h-[50px] rounded-xl bg-[#D3AF37]/20 flex items-center justify-center border border-[#D3AF37]/30">
+                <Scissors size={24} color="#D3AF37" />
+              </div>
+              <div>
+                <p className="text-xs text-[#A0A0A0] uppercase tracking-wider">Serviços</p>
+                <p className="text-2xl font-bold text-[#FFFFFF]">
+                  {resumoFinanceiro.totalServicos}
+                </p>
+              </div>
+            </div>
+
+            {/* Faturamento Total */}
+            <div className="flex items-center gap-4">
+              <div className="w-[50px] h-[50px] rounded-xl bg-[#D3AF37]/20 flex items-center justify-center border border-[#D3AF37]/30">
+                <DollarSign size={24} color="#D3AF37" />
+              </div>
+              <div>
+                <p className="text-xs text-[#A0A0A0] uppercase tracking-wider">Faturamento</p>
+                <p className="text-2xl font-bold text-[#D3AF37]">
+                  R$ {resumoFinanceiro.faturamentoTotal.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
+            </div>
           </div>
-
-        ) : (
-
-          // =====================================================
-          // LISTA DE HORÁRIOS
-          // =====================================================
-
-          horarios.map(
-
-            horario => {
-
-              // =================================================
-              // VERIFICAR OCUPAÇÃO
-              // =================================================
-
-              const ocupado =
-                horarioEstaOcupado(
-                  horario.hora
-                )
+        </div>
+      )}
 
 
-              // =================================================
-              // HORÁRIO COM ESTADO ATUALIZADO
-              // =================================================
+      {/* =====================================================
+          LISTA DE HORÁRIOS (MODO USUÁRIO)
+      ====================================================== */}
 
-              const horarioComEstado:
-                horarioType = {
-
-                ...horario,
-
-                ocupado
-
-              }
-
-
+      {!isAdmin && (
+        <div className="flex items-center flex-col mt-0 pb-[80px] gap-2 px-4 bg-gradient-to-b from-[#121212] to-[#1E1E1E]">
+          {isLoading ? (
+            <div className="w-full flex flex-col items-center justify-center py-12 gap-4">
+              <div className="w-12 h-12 border-4 border-[#D3AF37] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#A0A0A0] text-sm animate-pulse">Carregando agendamentos...</p>
+              <div className="w-full max-w-[500px] flex flex-col gap-2 mt-4">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="w-full h-[52px] bg-[#1E1E1E] rounded-lg animate-pulse border border-[#2A2A2A]" />
+                ))}
+              </div>
+            </div>
+          ) : (
+            horarios.map(horario => {
+              const ocupado = horarioEstaOcupado(horario.hora)
               return (
-
-                <div
-                  key={horario.hora}
-                  className="w-full"
-                >
-
+                <div key={horario.hora} className="w-full">
                   <button
-
                     onClick={() => {
-
-                      // =================================================
-                      // IMPEDIR HORÁRIO OCUPADO OU SÁBADO
-                      // =================================================
-
-                      if (
-                        ocupado ||
-                        ehSabado
-                      ) {
-
-                        return
-
-                      }
-
-
-                      // =================================================
-                      // SELECIONAR HORÁRIO
-                      // =================================================
-
-                      selecionarHorario(
-                        horario.hora
-                      )
-
-
-                      // =================================================
-                      // ABRIR FORMULÁRIO
-                      // =================================================
-
-                      setModalAgendamento(
-                        true
-                      )
-
+                      if (ocupado || ehSabado) { return }
+                      selecionarHorario(horario.hora)
+                      setModalAgendamento(true)
                     }}
-
                     className={`
                       w-full
                       py-3
@@ -865,123 +705,296 @@ const agendamentosFormulario =
                       text-left
                       transition-colors
                       border-2
-
-                      ${
-                        ocupado || ehSabado
-
-                          ? `
-                            bg-[#333333]
-                            text-[#757575]
-                            border-[#333333]
-                            cursor-not-allowed
-                          `
-
-                          : `
-                            bg-[#000000]
-                            text-[#D3AF37]
-                            border-[#D3AF37]
-                            hover:bg-[#2A2A2A]
-                          `
+                      ${ocupado || ehSabado
+                        ? `bg-[#333333] text-[#757575] border-[#333333] cursor-not-allowed`
+                        : `bg-[#000000] text-[#D3AF37] border-[#D3AF37] hover:bg-[#2A2A2A]`
                       }
                     `}
-
                   >
-
-                    <div
-                      className="
-                        flex
-                        justify-between
-                        items-center
-                      "
-                    >
-
-                      <span
-                        className={
-                          ocupado || ehSabado
-                            ? ''
-                            : 'text-[#D3AF37]'
-                        }
-                      >
+                    <div className="flex justify-between items-center">
+                      <span className={ocupado || ehSabado ? '' : 'text-[#D3AF37]'}>
                         {horario.hora}
                       </span>
-
-
-                      <span
-                        className={`
-                          text-sm
-
-                          ${
-                            ocupado || ehSabado
-                              ? 'text-[#757575]'
-                              : 'text-[#FFFFFF]'
-                          }
-                        `}
-                      >
-                        {
-                          ehSabado
-                            ? 'indisponível'
-                            : ocupado
-                              ? 'ocupado'
-                              : 'livre'
-                        }
+                      <span className={`text-sm ${ocupado || ehSabado ? 'text-[#757575]' : 'text-[#FFFFFF]'}`}>
+                        {ehSabado ? 'indisponível' : ocupado ? 'ocupado' : 'livre'}
                       </span>
+                    </div>
+                  </button>
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
 
+
+      {/* =====================================================
+          LISTA DE AGENDAMENTOS (MODO ADMIN) - CORRIGIDO
+      ====================================================== */}
+
+      {isAdmin && (
+        <div className="flex flex-col gap-4 pb-[80px]">
+          {isLoading || carregandoAdmin ? (
+            <div className="w-full flex flex-col items-center justify-center py-12 gap-4">
+              <div className="w-12 h-12 border-4 border-[#D3AF37] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#A0A0A0] text-sm">Carregando dados do servidor...</p>
+            </div>
+          ) : (
+            <>
+              {horarios.map(horario => {
+                const agendamento = obterAgendamentoPorHorario(horario.hora)
+                
+                if (!agendamento) return null
+
+                // Busca os dados do cliente
+                const clienteDB = dadosAdminMap[agendamento.cliente_id]
+                
+                // Busca os serviços do agendamento
+                const servicosAgendamento = servicosAgendamentoMap[agendamento.id] || []
+                
+                // Calcula duração e valor total
+                const { duracaoTotal, valorTotal } = calcularTotaisServicos(servicosAgendamento)
+                
+                // Dados do cliente
+                const dadosCliente = clienteDB ? {
+                  nome: clienteDB.nome || 'Cliente não identificado',
+                  telefone: clienteDB.telefone || '',
+                } : obterDadosCliente(agendamento.id)
+
+                const telefone = dadosCliente.telefone || ''
+
+                // Nomes dos serviços
+                const servicosNomes = servicosAgendamento.map(servico => servico.nome)
+
+                return (
+                  <div
+                    key={agendamento.id + '-' + horario.hora + '-' + dataFormatada}
+                    className="
+                      bg-[#1E1E1E]
+                      border
+                      border-[#2A2A2A]
+                      rounded-2xl
+                      p-5
+                      flex
+                      flex-col
+                      gap-4
+                      transition-all
+                      duration-200
+                      hover:border-[#D3AF37]
+                    "
+                  >
+                    {/* Cabeçalho */}
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-[45px] aspect-square rounded-xl bg-[#2A2A2A] flex items-center justify-center border border-[#D3AF37] shrink-0">
+                          <CalendarCheck color="#D3AF37" size={22} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-base text-[#FFFFFF] truncate">
+                            {dadosCliente.nome}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-[#A0A0A0]">{horario.hora}</span>
+                            {telefone && (
+                              <>
+                                <span className="text-xs text-[#757575]">•</span>
+                                <span className="text-sm text-[#A0A0A0]">{formatarTelefone(telefone)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botões de ação */}
+                      <div className="flex gap-2 shrink-0">
+                        {telefone && (
+                          <button
+                            onClick={() => copiarTelefone(telefone)}
+                            className="w-[36px] h-[36px] rounded-xl bg-[#2A2A2A] flex items-center justify-center hover:bg-[#333333] transition-colors relative"
+                            title="Copiar telefone"
+                          >
+                            {copiado ? (
+                              <Check size={16} color="#4CAF50" />
+                            ) : (
+                              <Copy size={16} color="#A0A0A0" />
+                            )}
+                          </button>
+                        )}
+                     <button
+  onClick={() => {
+    // Buscar dados completos do agendamento
+    const agendamentoCompleto = agendamentos.find(a => a.id === agendamento.id)
+    setAgendamentoEditando(agendamentoCompleto)
+    setModalEdicao(true)
+  }}
+  className="w-[36px] h-[36px] rounded-xl bg-[#2A2A2A] flex items-center justify-center hover:bg-[#333333] transition-colors"
+  title="Editar"
+>
+  <Edit2 size={16} color="#A0A0A0" />
+</button>
+                        <button
+                          onClick={() => {
+                            setAgendamentoSelecionado(agendamento)
+                            setModalCancelar(true)
+                          }}
+                          className="w-[36px] h-[36px] rounded-xl bg-[#D32F2F]/20 flex items-center justify-center hover:bg-[#D32F2F]/40 transition-colors"
+                          title="Cancelar"
+                        >
+                          <Trash2 size={16} color="#FF6B6B" />
+                        </button>
+                      </div>
                     </div>
 
-                  </button>
+                    {/* Serviços */}
+                    {servicosNomes.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {servicosNomes.map((nome, index) => (
+                          <span
+                            key={index}
+                            className="bg-[#2A2A2A] text-xs text-[#E0E0E0] px-3 py-1 rounded-full border border-[#333333]"
+                          >
+                            {nome}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
+                    {/* Resumo */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#2A2A2A]">
+                      <div className="flex items-center gap-4">
+                        {duracaoTotal > 0 && (
+                          <span className="text-sm text-[#A0A0A0] flex items-center gap-1">
+                            <Clock size={14} color="#757575" />
+                            {duracaoTotal} min
+                          </span>
+                        )}
+                        {valorTotal > 0 && (
+                          <strong className="text-[#D3AF37] text-base">
+                            R$ {valorTotal.toFixed(2).replace('.', ',')}
+                          </strong>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setAgendamentoSelecionado(agendamento)
+                          setModalCancelar(true)
+                        }}
+                        className="bg-[#D32F2F] text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-[#B71C1C] transition-colors"
+                      >
+                        CANCELAR AGENDAMENTO
+                      </button>
+                    </div>
+                  </div>
+                )
+              }).filter(Boolean)}
+
+              {/* Mensagem quando não há agendamentos */}
+              {!isLoading && horarios.every(h => !obterAgendamentoPorHorario(h.hora)) && (
+                <div className="w-full flex flex-col items-center justify-center py-12 gap-4 bg-[#1E1E1E] border border-[#2A2A2A] rounded-2xl">
+                  <CalendarCheck size={40} color="#757575" />
+                  <p className="text-sm text-[#A0A0A0]">Nenhum agendamento para este dia</p>
                 </div>
-
-              )
-
-            }
-
-          )
-
-        )}
+              )}
+              
+            </>
+          )}
+        </div>
+      )}
 
 
-        {/* =================================================
-            FORMULÁRIO
-        ================================================== */}
+      {/* =====================================================
+          FORMULÁRIO (MODO USUÁRIO)
+      ====================================================== */}
 
-        {
-          modalAgendamento &&
-          horarioSelecionado &&
-          !ehSabado &&
-          !isLoading &&
+      {
+        modalAgendamento &&
+        horarioSelecionado &&
+        !ehSabado &&
+        !isLoading && (
+          <Formulario
+            horario={horarioSelecionado}
+            data={dataFormatada}
+            agendamentos={agendamentosFormulario}
+            fecharModal={() => {
+              setModalAgendamento(false)
+              selecionarHorario(null)
+            }}
+          />
+        )
+      }
 
-          (
 
-<Formulario
+      {/* =====================================================
+          MODAL CANCELAR (ADMIN)
+      ====================================================== */}
+{modalEdicao && agendamentoEditando && (
+  <FormularioEdicao
+    agendamentoId={agendamentoEditando.id}
+    agendamentoData={agendamentoEditando}
+    fecharModal={() => {
+      setModalEdicao(false)
+      setAgendamentoEditando(null)
+    }}
+    agendamentos={agendamentosFormulario}
+    onUpdate={() => {
+      // Recarregar dados
+      setModalEdicao(false)
+      setAgendamentoEditando(null)
+      // Disparar recarga dos dados
+    }}
+  />
+)}
+      {modalCancelar && agendamentoSelecionado && (
+        <div className="fixed inset-0 bg-[#121212]/90 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1E1E1E] rounded-2xl p-6 w-[90%] max-w-[380px] flex flex-col gap-6 border border-[#2A2A2A]">
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalCancelar(false)
+                  setAgendamentoSelecionado(null)
+                }}
+                className="bg-[#2A2A2A] rounded-full p-2 hover:bg-[#333333] transition-colors"
+              >
+                <X size={20} color="#757575" />
+              </button>
+            </div>
 
-  horario={
-    horarioSelecionado
-  }
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-[#FFFFFF]">Cancelar agendamento?</h2>
+              <p className="text-sm text-[#A0A0A0] mt-2">
+                {obterDadosCliente(agendamentoSelecionado.id).nome}
+                {' - '}
+                {formatarDataParaExibicao(dataFormatada)}
+                {' às '}
+                {agendamentoSelecionado.hora_inicio?.slice(0, 5)}
+              </p>
+            </div>
 
-  data={
-    dataFormatada
-  }
-
-agendamentos={agendamentosFormulario}
-
-  fecharModal={() => {
-
-    setModalAgendamento(false)
-
-    selecionarHorario(null)
-
-  }}
-
-/>
-
-          )
-        }
-
-      </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalCancelar(false)
+                  setAgendamentoSelecionado(null)
+                }}
+                className="flex-1 border-2 border-[#333333] rounded-xl py-3 font-semibold text-[#E0E0E0] hover:bg-[#2A2A2A] transition-colors"
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelarAgendamento}
+                className="flex-1 rounded-xl bg-[#D32F2F] text-[#FFFFFF] py-3 font-semibold hover:bg-[#B71C1C] transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
-
   )
-
 }
