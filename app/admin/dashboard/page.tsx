@@ -4,7 +4,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../context/AuthContext'
-
+import Callendar from '@/app/components/Callendar'
 export default function Dashboard() {
     const router = useRouter()
     const { isAuthenticated, isLoading, profile, logout } = useAuth()
@@ -52,9 +52,9 @@ export default function Dashboard() {
                 </button>
                 
                 {/* Aqui você pode adicionar o Callendar depois */}
-                <div className="mt-8 p-4 bg-[#1E1E1E] rounded-lg border border-[#2A2A2A]">
-                    <p className="text-gray-400">Aqui virá o calendário administrativo</p>
-                </div>
+            <div className="max-w-7xl mx-auto p-4">
+                <Callendar />
+            </div>
             </div>
         </div>
     )
