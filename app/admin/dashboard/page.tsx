@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../context/AuthContext'
 
-export default function AdminDashboard() {
+export default function Dashboard() {
     const router = useRouter()
     const { isAuthenticated, isLoading, profile, logout } = useAuth()
 
