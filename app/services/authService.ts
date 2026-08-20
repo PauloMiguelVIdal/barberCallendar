@@ -1,5 +1,5 @@
 // services/authService.ts
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/supabase'  
 import { ProfileType } from '../types/profile'
 
 /**
@@ -7,13 +7,21 @@ import { ProfileType } from '../types/profile'
  */
 export async function loginBarbeiro(email: string, password: string) {
     try {
+        console.log('Tentando login para:', email)
+        
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
         })
 
-        if (error) throw error
+        if (error) {
+            console.error('Erro no signIn:', error)
+            throw error
+        }
 
+        console.log('Usuário logado:', data.user.id)
+
+        // Buscar o perfil
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -21,9 +29,12 @@ export async function loginBarbeiro(email: string, password: string) {
             .single()
 
         if (profileError) {
+            console.error('Erro ao buscar perfil:', profileError)
             await supabase.auth.signOut()
-            throw new Error('Perfil não encontrado')
+            throw new Error('Perfil não encontrado. Contate o administrador.')
         }
+
+        console.log('Perfil encontrado:', profile)
 
         if (!['barbeiro', 'admin'].includes(profile.role)) {
             await supabase.auth.signOut()
